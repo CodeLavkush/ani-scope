@@ -38,7 +38,23 @@ const userLoginValidator = () => {
     ]
 }
 
+const createMovieValidator = () => {
+    return [
+        body("title")
+            .trim()
+            .notEmpty()
+            .withMessage("Title is required"),
+        body("description")
+            .trim(),
+        body("releaseYear")
+            .trim(),
+        body("genre")
+            .trim(),
+    ]
+}
+
 export {
     userLoginValidator,
     userRegisterValidator,
+    createMovieValidator
 }

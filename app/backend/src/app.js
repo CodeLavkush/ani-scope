@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import { errorMiddleware } from "./middlewares/error.middleware.js"
 
 const app = express()
 
@@ -21,9 +22,13 @@ app.use(cors({
 // import the routes
 import healthCheckRouter from "./routes/healthcheck.routes.js"
 import authRouter from "./routes/auth.routes.js"
+import movieRouter from "./routes/movie.routes.js"
 
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/movie", movieRouter)
+
+app.use(errorMiddleware)
 
 app.get('/', (req, res) => {
     res.send("Welcome to project camp")

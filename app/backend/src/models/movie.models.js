@@ -11,7 +11,7 @@ const movieSchema = new Schema(
             type: String,
         },
         releaseYear: {
-            type: Date,
+            type: String,
         },
         genre: {
             type: String,
@@ -49,4 +49,4 @@ const movieSchema = new Schema(
     }
 );
 
-export const Moive = mongoose.model("Movie", movieSchema)
+export const Movie = mongoose.model("Movie", movieSchema)

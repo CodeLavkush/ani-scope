@@ -20,6 +20,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
