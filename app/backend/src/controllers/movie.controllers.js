@@ -33,7 +33,7 @@ const createMovie = asyncHandler(async (req, res) => {
 
     const decision = evaluateNSFW(nsfwProbability)
 
-    if (decision.status === "BLOCK") {
+    if (decision.status === "BLOCK" || decision.status === "REVIEW") {
         throw new ApiError(400, decision.reason);
     }
 
