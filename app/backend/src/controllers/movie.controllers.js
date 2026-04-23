@@ -6,6 +6,7 @@ import { Movie } from "../models/movie.models.js"
 import mongoose from "mongoose"
 import { uploadToSupabase } from "../services/storage.service.js"
 import { nsfwChecker, evaluateNSFW } from "../services/nsfwChecker.service.js"
+import { imageQueue } from "../queues/image.queues.js"
 
 
 
@@ -60,6 +61,17 @@ const createMovie = asyncHandler(async (req, res) => {
             master: imageUrl,
         },
     });
+
+    await imageQueue.add(
+        "process-image",
+        {
+            movieId: movie._id.toString(),
+            imageUrl,
+        },
+        {
+            timeout: 10000
+        }
+    )
 
     return res.json(
         new ApiResponse(
