@@ -7,7 +7,7 @@ import mongoose from "mongoose"
 import { uploadBufferToSupabase } from "../services/storage.service.js"
 import { nsfwChecker, evaluateNSFW } from "../services/nsfwChecker.service.js"
 import { imageQueue } from "../queues/image.queues.js"
-
+import { supabase } from "../config/supabase.js"
 
 
 const createMovie = asyncHandler(async (req, res) => {
@@ -81,6 +81,143 @@ const createMovie = asyncHandler(async (req, res) => {
     )
 })
 
+
+const getMovies = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10
+    const cursor = req.query.cursor
+
+    let query = {}
+
+    if (cursor) {
+        query._id = { $gt: new mongoose.Types.ObjectId(cursor) }
+    }
+
+    const movies = await Movie.find(query)
+        .sort({ _id: 1 })
+        .limit(limit)
+
+    const nextCursor = movies.length > 0 ? movies[movies.length - 1]._id.toString() : null;
+
+    if (movies.length === 0) {
+        throw new ApiError(404, "Movies not found")
+    }
+
+    return res
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    data: movies,
+                    cursor: nextCursor,
+                },
+                "Movies fetched successfully"
+            )
+        )
+
+
+})
+
+const getMovieById = asyncHandler(async (req, res) => {
+    const { movieId } = req.params
+
+    const movie = await Movie.findById(movieId)
+
+    if (!movie) {
+        throw new ApiError(404, "Movie not found")
+    }
+
+    return res
+        .json(
+            new ApiResponse(
+                200,
+                movie,
+                "Movie fetched successfully"
+            )
+        )
+})
+
+const updateMovieById = asyncHandler(async (req, res) => {
+    const { title, description, releaseYear, genre, tags } = req.body;
+    const { movieId } = req.params
+
+    let parsedTags = [];
+    if (tags) {
+        parsedTags = Array.isArray(tags)
+            ? tags
+            : tags.split(",").map(tag => tag.trim());
+    }
+
+    const updatedMovie = await Movie.findByIdAndUpdate(
+        movieId,
+        {
+            title,
+            description,
+            releaseYear,
+            genre,
+            tags: parsedTags,
+        },
+        {
+            returnDocument: "after",
+        }
+    )
+
+    if (!updatedMovie) {
+        throw new ApiError(404, "Updated movie not found")
+    }
+
+    return res
+        .json(
+            new ApiResponse(
+                200,
+                updatedMovie,
+                "Movie information updated successfully"
+            )
+        )
+})
+
+const deleteMovieById = asyncHandler(async (req, res) => {
+    const { movieId } = req.params;
+
+    const movie = await Movie.findById(movieId);
+
+    if (!movie) {
+        throw new ApiError(404, "Movie not found");
+    }
+
+    // collect images
+    const images = [
+        movie.poster?.master,
+        movie.poster?.small,
+        movie.poster?.medium,
+        movie.poster?.large,
+    ].filter(Boolean);
+
+    // convert URLs → file names
+    const filesToDelete = images.map((url) =>
+        url.split("/").pop()
+    );
+
+    // delete from supabase
+    const { error } = await supabase.storage
+        .from(process.env.SUPABASE_BUCKET)
+        .remove(filesToDelete);
+
+    if (error) {
+        console.error("Supabase delete error:", error.message);
+    }
+
+    // delete from DB
+    await Movie.findByIdAndDelete(movieId);
+
+    return res.json(
+        new ApiResponse(200, movie, "Movie deleted successfully")
+    );
+});
+
 export {
     createMovie,
+    getMovies,
+    getMovieById,
+    updateMovieById,
+    deleteMovieById,
 }

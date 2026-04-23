@@ -38,7 +38,7 @@ const userLoginValidator = () => {
     ]
 }
 
-const createMovieValidator = () => {
+const movieValidator = () => {
     return [
         body("title")
             .trim()
@@ -50,11 +50,13 @@ const createMovieValidator = () => {
             .trim(),
         body("genre")
             .trim(),
+        body("tags")
+            .trim()
     ]
 }
 
 export {
     userLoginValidator,
     userRegisterValidator,
-    createMovieValidator
+    movieValidator
 }

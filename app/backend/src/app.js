@@ -26,7 +26,7 @@ import movieRouter from "./routes/movie.routes.js"
 
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
-app.use("/api/v1/movie", movieRouter)
+app.use("/api/v1/movies", movieRouter)
 
 app.use(errorMiddleware)
 
