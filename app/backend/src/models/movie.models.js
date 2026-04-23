@@ -38,6 +38,14 @@ const movieSchema = new Schema(
                 trim: true,
             },
         },
+        processing: {
+            status: {
+                type: String,
+                enum: ["pending", "processing", "processed", "failed"],
+                default: "pending",
+            },
+            error: String,
+        },
         user: {
             type: Schema.Types.ObjectId,
             ref: "User",

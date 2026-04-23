@@ -4,7 +4,7 @@ import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import { Movie } from "../models/movie.models.js"
 import mongoose from "mongoose"
-import { uploadToSupabase } from "../services/storage.service.js"
+import { uploadBufferToSupabase } from "../services/storage.service.js"
 import { nsfwChecker, evaluateNSFW } from "../services/nsfwChecker.service.js"
 import { imageQueue } from "../queues/image.queues.js"
 
@@ -20,7 +20,6 @@ const createMovie = asyncHandler(async (req, res) => {
         )
     }
 
-
     if (!req.file) {
         throw new ApiError(
             400,
@@ -29,7 +28,6 @@ const createMovie = asyncHandler(async (req, res) => {
     }
 
     // NSFW checking
-
     const nsfwProbability = await nsfwChecker(req.file.buffer);
 
     const decision = evaluateNSFW(nsfwProbability)
@@ -39,7 +37,7 @@ const createMovie = asyncHandler(async (req, res) => {
     }
 
     //Saving image after checking nsfw flag
-    const imageUrl = await uploadToSupabase(req.file);
+    const imageUrl = await uploadBufferToSupabase(req.file);
 
 
     // Tags processing
@@ -60,18 +58,19 @@ const createMovie = asyncHandler(async (req, res) => {
         poster: {
             master: imageUrl,
         },
+        processing: {
+            status: "processing"
+        },
     });
 
-    await imageQueue.add(
-        "process-image",
+    const job = await imageQueue.add(
+        "image-processing",
         {
             movieId: movie._id.toString(),
             imageUrl,
         },
-        {
-            timeout: 10000
-        }
     )
+
 
     return res.json(
         new ApiResponse(
