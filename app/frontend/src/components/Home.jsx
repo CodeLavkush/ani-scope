@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
 import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
-import { Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, FastForward } from "lucide-react";
 
 import suzume from "../assets/SUZUME.jpg"
 import yourName from "../assets/yourname.jpg"
@@ -12,6 +12,12 @@ import jujutsuKaisen from "../assets/jujutsu_kaisen.jpg"
 
 
 function Home() {
+    const [menuVisible, setMenuVisible] = useState(false)
+
+    const handleMenu = () => {
+        setMenuVisible(!menuVisible)
+    }
+
     return (
         <div className='w-screen h-screen overflow-hidden relative'>
 
@@ -83,7 +89,17 @@ function Home() {
 
 
             {/* for smaller screens */}
-            <div className="w-full h-full grid grid-rows-12 bg-primary lg:hidden">
+            <div className="w-full h-full grid grid-rows-12 bg-primary lg:hidden relative">
+                <div className={`w-full h-full grid grid-rows-8 bg-primary absolute transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
+                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Home</p>
+                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>About</p>
+                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Submission</p>
+                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Lists</p>
+                    <div className='row-span-2 flex justify-around items-center gap-10'>
+                        <p className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>Login</p>
+                        <p className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>Register</p>
+                    </div>
+                </div>
                 <div className='row-span-2 grid grid-rows-2'>
                     <div className='grid grid-cols-2'>
                         <div className='col-span-1 flex justify-center px-4 flex-col'>
@@ -105,18 +121,18 @@ function Home() {
                     <h1 className='font-bold uppercase text-2xl font-outfit tracking-wide text-accent'>Your Name</h1>
                 </div>
                 <div className='row-span-2 flex justify-start items-start pl-4'>
-                    <p className='text-accent tracking-wider font-medium max-w-100 font-poppins'>
+                    <p className='text-accent tracking-wider font-medium sm:max-w-100 md:max-w-200 font-poppins'>
                         Two teenagers share a profound, magical connection upon discovering they are swapping bodies. Things manage to become even more complicated when the boy and girl decide to meet in person.
                     </p>
                 </div>
-                <div className='row-span-1 grid grid-cols-3'>
+                <div className='row-span-1 grid grid-cols-3 z-10'>
                     <div className='bg-bg'>
                         <button className='w-full h-full flex justify-center items-center'>
                             <ChevronLeft className='text-accent text-2xl font-bold h-12 w-12' />
                         </button>
                     </div>
                     <div className='bg-menu'>
-                        <button className='w-full h-full flex justify-center items-center'>
+                        <button onClick={handleMenu} className='w-full h-full flex justify-center items-center'>
                             <Menu className='text-accent text-2xl font-bold h-12 w-12' />
                         </button>
                     </div>
