@@ -3,6 +3,7 @@ import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
 import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
+import { Link } from "react-router-dom"
 import { Menu, X, ChevronLeft, ChevronRight, FastForward } from "lucide-react";
 
 import suzume from "../assets/SUZUME.jpg"
@@ -51,17 +52,17 @@ function Home() {
                 </div>
                 <div className='col-span-5 grid lg:grid-rows-8 xl:grid-rows-8 w-full h-full z-10'>
                     <div className='row-span-1 grid grid-cols-4' >
-                        <p className='col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>Home</p>
-                        <p className='col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>About</p>
-                        <p className='col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>Submission</p>
-                        <p className='col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>Lists</p>
+                        {["Home", "About", "Submission", "Lists"].map((value, index) => (
+                            <Link to={`/${value.toLowerCase()}`} key={index} className='col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>{value}</Link>
+                        ))}
                     </div>
                     <div className='lg:row-span-6 xl:row-span-4'>
 
                     </div>
                     <div className='row-span-3 grid grid-cols-2 pt-12'>
-                        <p className='col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>Login</p>
-                        <p className='col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>Register</p>
+                        {["Login", "Register"].map((value, index) => (
+                            <Link to={`/${value.toLowerCase()}`} key={index} className='col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>{value}</Link>
+                        ))}
                     </div>
                 </div>
                 <div className='col-span-4'>
@@ -91,13 +92,13 @@ function Home() {
             {/* for smaller screens */}
             <div className="w-full h-full grid grid-rows-12 bg-primary lg:hidden relative">
                 <div className={`w-full h-full grid grid-rows-8 bg-primary absolute transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Home</p>
-                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>About</p>
-                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Submission</p>
-                    <p className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>Lists</p>
+                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
+                        <Link to={`/${value.toLowerCase()}`} key={index} className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
+                    ))}
                     <div className='row-span-2 flex justify-around items-center gap-10'>
-                        <p className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>Login</p>
-                        <p className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>Register</p>
+                        {["Login", "Register"].map((value, index) => (
+                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
+                        ))}
                     </div>
                 </div>
                 <div className='row-span-2 grid grid-rows-2'>
