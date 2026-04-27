@@ -3,7 +3,7 @@ import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
 import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
-import { Menu, ChevronLeft, ChevronRight, FastForward } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight, FastForward } from "lucide-react";
 
 import suzume from "../assets/SUZUME.jpg"
 import yourName from "../assets/yourname.jpg"
@@ -133,7 +133,9 @@ function Home() {
                     </div>
                     <div className='bg-menu'>
                         <button onClick={handleMenu} className='w-full h-full flex justify-center items-center'>
-                            <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                            {
+                                menuVisible ? <X className='text-accent text-2xl font-bold h-12 w-12' /> : <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                            }
                         </button>
                     </div>
                     <div className='bg-btn'>
