@@ -134,7 +134,7 @@ function Register() {
                                         }
                                     </button>
                                 </div>
-                                <div className='w-full flex justify-center items-start px-16 md:px-40'> required
+                                <div className='w-full flex justify-center items-start px-16 md:px-40'>
                                     <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
                                         {
                                             loading ? <Loader /> : "Register"

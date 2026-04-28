@@ -1,10 +1,10 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
 import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
 import { Link } from "react-router-dom"
-import { Menu, X, ChevronLeft, ChevronRight, FastForward } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight, FastForward, Cookie } from "lucide-react";
 
 import suzume from "../assets/SUZUME.jpg"
 import yourName from "../assets/yourname.jpg"
@@ -17,6 +17,7 @@ import gsap from 'gsap'
 function Home() {
     const [menuVisible, setMenuVisible] = useState(false)
     const mainContainerRef = useRef()
+    const [token, setToken] = useState(null)
 
     const handleMenu = () => {
         const tl = gsap.timeline();
@@ -191,9 +192,11 @@ function Home() {
 
                     </div>
                     <div className='row-span-3 grid grid-cols-2 pt-12'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>{value}</Link>
-                        ))}
+                        {
+                            token ? <Link to="/profile" className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>Profile</Link> : ["Login", "Register"].map((value, index) => (
+                                <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>{value}</Link>
+                            ))
+                        }
                     </div>
                 </div>
                 <div className='col-span-4'>
