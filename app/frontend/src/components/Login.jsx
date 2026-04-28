@@ -4,13 +4,16 @@ import smallerCoverImage from "../assets/covers/login_cover_h.jpg"
 import loginCharacter from "../assets/login_character.png"
 import coverImage from "../assets/covers/login_cover.jpg"
 import { Eye, EyeOff } from "lucide-react"
-import { login } from "../api/auth.js"
+import { login as authLogin } from "../api/auth.js"
 import { Link, useNavigate } from 'react-router-dom'
 import Loader from './Loader.jsx'
+import { useDispatch } from 'react-redux';
+import { login, logout } from '../store/authSlice.js'
 
 function Login() {
     const [seePassword, setSeePassword] = useState(false)
     const [loading, setLoading] = useState(false)
+    const dispatch = useDispatch()
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
         email: "",
@@ -34,13 +37,15 @@ function Login() {
 
         try {
             setLoading(true)
-            const data = await login(formData)
+            const data = await authLogin(formData)
 
             if (data?.success) {
+                dispatch(login(data.data.user))
                 navigate("/home")
             }
         } catch (error) {
             console.error("ERROR: ", error)
+            dispatch(logout())
         }
         finally {
             formData.email = ""

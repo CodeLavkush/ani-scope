@@ -1,32 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
-import { Menu, X } from "lucide-react"
+import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
+import Menu from './Menu'
+import { useSelector } from 'react-redux'
 
 function Profile() {
     const [menuVisible, setMenuVisible] = useState(false)
+    const authStatus = useSelector((state) => state.auth.status)
+    const userData = useSelector((state) => state.auth.userData)
+    const [username, setUsername] = useState(null)
+    const [email, setEmail] = useState(null)
 
     const handleMenu = () => {
         setMenuVisible(!menuVisible)
     }
+
+    useEffect(() => {
+        setEmail(userData.email)
+        setUsername(userData.username)
+    }, [userData])
+
     return (
         <div className='w-screen h-screen overflow-hidden'>
+            {/* larger screens */}
             <div className='hidden lg:flex w-full h-full bg-primary p-10 relative'>
-                <div className={`max-w-100 h-full p-2 grid grid-rows-8 bg-primary absolute right-0 transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                        <Link to={`/${value.toLowerCase()}`} key={index} className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
-                    ))}
-                    <div className='row-span-2 flex justify-around items-center gap-10'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
-                        ))}
-                    </div>
-                    <div className='row-span-2'>
-                        <button onClick={handleMenu} className='w-full h-full flex justify-start items-center cursor-pointer'>
-                            <X className='text-accent text-2xl font-bold h-12 w-12' />
-                        </button>
-                    </div>
-                </div>
+                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"larger"} handleMenu={handleMenu} />
                 <div className='bg-bg w-full h-full grid grid-cols-2'>
                     <div className='col-span-1 grid grid-rows-8 overflow-y-auto'>
                         <div className='row-span-1 flex items-center px-10'>
@@ -55,15 +54,15 @@ function Profile() {
                                 </div>
                                 <div className='bg-menu'>
                                     <button onClick={handleMenu} className='w-full h-full flex justify-center items-center cursor-pointer'>
-                                        <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                                        <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
                                     </button>
                                 </div>
                             </div>
                             <div className='row-span-1 flex justify-center items-center'>
-                                <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>Username</p>
+                                <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>{username}</p>
                             </div>
                             <div className='row-span-1 flex justify-center items-center'>
-                                <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>Email</p>
+                                <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>{email}</p>
                             </div>
                         </div>
                         <div className='row-span-1 flex justify-center items-center'>
@@ -75,21 +74,7 @@ function Profile() {
 
             {/* smaller screens  */}
             <div className='lg:hidden flex w-full h-full bg-primary p-10 relative'>
-                <div className={`md:max-w-100 w-full h-full p-2 grid grid-rows-8 bg-primary absolute right-0 transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                        <Link to={`/${value.toLowerCase()}`} key={index} className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
-                    ))}
-                    <div className='row-span-2 flex justify-around items-center gap-10'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
-                        ))}
-                    </div>
-                    <div className='row-span-2'>
-                        <button onClick={handleMenu} className='w-full h-full flex justify-start items-center cursor-pointer'>
-                            <X className='text-accent text-2xl font-bold h-12 w-12' />
-                        </button>
-                    </div>
-                </div>
+                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"smaller"} handleMenu={handleMenu} />
                 <div className='bg-bg w-full h-full grid grid-rows-8'>
                     <div className='row-span-2 grid grid-rows-3 bg-menu'>
                         <div className='row-span-1 flex justify-around items-center'>
@@ -98,15 +83,15 @@ function Profile() {
                             </div>
                             <div className='bg-menu'>
                                 <button onClick={handleMenu} className='w-full h-full flex justify-center items-center cursor-pointer'>
-                                    <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                                    <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
                                 </button>
                             </div>
                         </div>
                         <div className='row-span-1 flex justify-center items-center'>
-                            <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>Username</p>
+                            <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>{username}</p>
                         </div>
                         <div className='row-span-1 flex justify-center items-center'>
-                            <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>Email</p>
+                            <p className='text-accent font-bold font-outfit tracking-wider text-2xl uppercase'>{email}</p>
                         </div>
                     </div>
                     <div className='row-span-6 grid grid-rows-8'>

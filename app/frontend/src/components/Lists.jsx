@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
-import { Menu, X } from "lucide-react"
+import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import Menu from './Menu'
 
 function Lists() {
     const [menuVisible, setMenuVisible] = useState(false)
+    const authStatus = useSelector((state) => state.auth.status)
 
     const handleMenu = () => {
         setMenuVisible(!menuVisible)
@@ -13,21 +16,7 @@ function Lists() {
         <div className='w-screen h-screen overflow-hidden'>
             {/* large screens */}
             <div className='hidden lg:flex bg-primary w-full h-full p-10 relative'>
-                <div className={`max-w-100 h-full p-2 grid grid-rows-8 bg-primary absolute right-0 transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                        <Link to={`/${value.toLowerCase()}`} key={index} className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
-                    ))}
-                    <div className='row-span-2 flex justify-around items-center gap-10'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
-                        ))}
-                    </div>
-                    <div className='row-span-2'>
-                        <button onClick={handleMenu} className='w-full h-full flex justify-start items-center cursor-pointer'>
-                            <X className='text-accent text-2xl font-bold h-12 w-12' />
-                        </button>
-                    </div>
-                </div>
+                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"larger"} handleMenu={handleMenu} />
                 <div className='bg-bg w-full h-full rounded-xl grid grid-rows-8'>
                     <div className='row-span-1 flex justify-around items-center px-10'>
                         <div>
@@ -35,7 +24,7 @@ function Lists() {
                         </div>
                         <div>
                             <button onClick={handleMenu} className='w-full h-full flex justify-center items-center cursor-pointer'>
-                                <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                                <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
                             </button>
                         </div>
                     </div>
@@ -66,21 +55,7 @@ function Lists() {
 
             {/* smaller screens */}
             <div className='lg:hidden flex bg-primary w-full h-full p-10 relative'>
-                <div className={`md:max-w-100 w-full h-full p-2 grid grid-rows-8 bg-primary absolute right-0 transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                        <Link to={`/${value.toLowerCase()}`} key={index} className='row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
-                    ))}
-                    <div className='row-span-2 flex justify-around items-center gap-10'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
-                        ))}
-                    </div>
-                    <div className='row-span-2'>
-                        <button onClick={handleMenu} className='w-full h-full flex justify-start items-center cursor-pointer'>
-                            <X className='text-accent text-2xl font-bold h-12 w-12' />
-                        </button>
-                    </div>
-                </div>
+                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"smaller"} handleMenu={handleMenu} />
                 <div className='bg-bg w-full h-full rounded-xl grid grid-rows-8'>
                     <div className='row-span-1 flex justify-around items-center'>
                         <div>
@@ -88,7 +63,7 @@ function Lists() {
                         </div>
                         <div>
                             <button onClick={handleMenu} className='w-full h-full flex justify-center items-center cursor-pointer'>
-                                <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                                <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
                             </button>
                         </div>
                     </div>

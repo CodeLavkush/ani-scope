@@ -3,8 +3,8 @@ import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
 import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
-import { Link } from "react-router-dom"
-import { Menu, X, ChevronLeft, ChevronRight, FastForward, Cookie } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"
+import { Menu as MenuIcon, X, ChevronLeft, ChevronRight, FastForward, Cookie } from "lucide-react";
 
 import suzume from "../assets/SUZUME.jpg"
 import yourName from "../assets/yourname.jpg"
@@ -14,10 +14,19 @@ import jujutsuKaisen from "../assets/jujutsu_kaisen.jpg"
 import { useGSAP } from "@gsap/react"
 import gsap from 'gsap'
 
+import { useSelector } from 'react-redux'
+import Menu from './Menu'
+
+import { logout as authLogout } from '../api/auth'
+import { useDispatch } from 'react-redux'
+import { logout } from '../store/authSlice'
+
 function Home() {
-    const [menuVisible, setMenuVisible] = useState(false)
     const mainContainerRef = useRef()
-    const [token, setToken] = useState(null)
+    const authStatus = useSelector((state) => state.auth.status)
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+    const [menuVisible, setMenuVisible] = useState(false)
 
     const handleMenu = () => {
         const tl = gsap.timeline();
@@ -41,6 +50,18 @@ function Home() {
                 ease: "power3.in",
                 onComplete: () => setMenuVisible(false)
             });
+        }
+    }
+
+    const handleLogout = async () => {
+        try {
+            const data = await authLogout()
+            if (data.success) {
+                dispatch(logout())
+                navigate("/login")
+            }
+        } catch (error) {
+            console.error(error)
         }
     }
 
@@ -193,7 +214,17 @@ function Home() {
                     </div>
                     <div className='row-span-3 grid grid-cols-2 pt-12'>
                         {
-                            token ? <Link to="/profile" className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>Profile</Link> : ["Login", "Register"].map((value, index) => (
+                            authStatus ? ["Profile", "Logout"].map((value, index) => {
+                                if (value === "Profile") {
+                                    return (
+                                        <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center'>{value}</Link>
+                                    )
+                                } else {
+                                    return (
+                                        <button onClick={handleLogout} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center'>{value}</button>
+                                    )
+                                }
+                            }) : ["Login", "Register"].map((value, index) => (
                                 <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>{value}</Link>
                             ))
                         }
@@ -225,16 +256,7 @@ function Home() {
 
             {/* for smaller screens */}
             <div className="w-full h-full grid grid-rows-12 bg-primary lg:hidden relative">
-                <div className={`mobile-menu w-full h-full grid grid-rows-8 bg-primary absolute transition-all z-1 ${menuVisible ? "flex" : "hidden"}`}>
-                    {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                        <Link to={`/${value.toLowerCase()}`} key={index} className='mobile-link row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
-                    ))}
-                    <div className='row-span-2 flex justify-around items-center gap-10'>
-                        {["Login", "Register"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='text-xl bg-accent text-white font-poppins font-medium tracking-wider px-8 py-4 rounded-md active:bg-bg active:text-black'>{value}</Link>
-                        ))}
-                    </div>
-                </div>
+                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"smaller"} handleMenu={handleMenu} closeBtn={false} />
                 <div className='row-span-2 grid grid-rows-2'>
                     <div className='grid grid-cols-2'>
                         <div className='col-span-1 flex justify-center px-4 flex-col'>
@@ -269,7 +291,7 @@ function Home() {
                     <div className='bg-menu'>
                         <button onClick={handleMenu} className='w-full h-full flex justify-center items-center'>
                             {
-                                menuVisible ? <X className='text-accent text-2xl font-bold h-12 w-12' /> : <Menu className='text-accent text-2xl font-bold h-12 w-12' />
+                                menuVisible ? <X className='text-accent text-2xl font-bold h-12 w-12' /> : <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
                             }
                         </button>
                     </div>

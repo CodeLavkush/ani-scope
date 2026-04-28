@@ -6,8 +6,9 @@ import OTP from "./OTP.jsx";
 import Profile from "./Profile.jsx";
 import Submission from "./Submission.jsx";
 import Loader from "./Loader.jsx"
-
-
+import Menu from "./Menu.jsx";
+import Protected from "./AuthLayout.jsx";
+import About from "./About.jsx";
 
 export {
     Home,
@@ -17,5 +18,8 @@ export {
     Profile,
     OTP,
     Submission,
-    Loader
+    Loader,
+    Menu,
+    Protected,
+    About,
 }
