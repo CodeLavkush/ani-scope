@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { Link, useNavigate } from 'react-router-dom'
 import Loader from "./Loader.jsx"
 import { register } from "../api/auth.js"
+import toast from 'react-hot-toast'
 
 function Register() {
     const [seePassword, setSeePassword] = useState(false)
@@ -33,19 +34,30 @@ function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        if (formData.username.length > 8 || formData.password.length > 8) {
+            toast.error("Username and Password cannot contain more than 8 letters.")
+            return
+        }
+
         try {
+
             setLoading(true)
             const data = await register(formData)
 
             if (data?.success) {
+                toast.success(data.message)
                 navigate("/verification")
             }
+
         } catch (error) {
             console.error("ERROR:", error)
+            toast.error(error.message || "something went wrong!")
         } finally {
-            formData.username = ""
-            formData.email = ""
-            formData.password = ""
+            setFormData({
+                username: "",
+                email: "",
+                password: "",
+            })
             setLoading(false)
         }
     }

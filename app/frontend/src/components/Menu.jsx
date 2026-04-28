@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useGSAP } from "@gsap/react"
 import gsap from 'gsap'
 import { X } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 function Menu({ authStatus: status, screenType, menuVisible, handleMenu, closeBtn = true }) {
     const dispatch = useDispatch()
@@ -15,11 +16,13 @@ function Menu({ authStatus: status, screenType, menuVisible, handleMenu, closeBt
         try {
             const data = await authLogout()
             if (data.success) {
+                toast.success(data.message)
                 dispatch(logout())
                 navigate("/home")
             }
         } catch (error) {
-            console.error
+            console.error(error)
+            toast.error(error.message || "something went wrong!")
         }
     }
 

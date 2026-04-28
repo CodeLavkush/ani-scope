@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Loader from './Loader.jsx'
 import { useDispatch } from 'react-redux';
 import { login, logout } from '../store/authSlice.js'
+import toast from 'react-hot-toast'
 
 function Login() {
     const [seePassword, setSeePassword] = useState(false)
@@ -40,11 +41,13 @@ function Login() {
             const data = await authLogin(formData)
 
             if (data?.success) {
+                toast.success(data.message)
                 dispatch(login(data.data.user))
                 navigate("/home")
             }
         } catch (error) {
             console.error("ERROR: ", error)
+            toast.error(error.message || "something went wrong!")
             dispatch(logout())
         }
         finally {

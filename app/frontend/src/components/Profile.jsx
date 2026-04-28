@@ -4,6 +4,7 @@ import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
 import Menu from './Menu'
 import { useSelector } from 'react-redux'
+import toast from 'react-hot-toast'
 
 function Profile() {
     const [menuVisible, setMenuVisible] = useState(false)
@@ -17,9 +18,13 @@ function Profile() {
     }
 
     useEffect(() => {
-        setEmail(userData.email)
-        setUsername(userData.username)
+        setEmail(userData?.email)
+        setUsername(userData?.username)
     }, [userData])
+
+    useEffect(() => {
+        toast.success(`Welcome! ${userData?.username}.`)
+    }, [])
 
     return (
         <div className='w-screen h-screen overflow-hidden'>

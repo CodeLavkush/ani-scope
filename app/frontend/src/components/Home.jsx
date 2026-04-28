@@ -20,6 +20,7 @@ import Menu from './Menu'
 import { logout as authLogout } from '../api/auth'
 import { useDispatch } from 'react-redux'
 import { logout } from '../store/authSlice'
+import toast from 'react-hot-toast'
 
 function Home() {
     const mainContainerRef = useRef()
@@ -57,11 +58,13 @@ function Home() {
         try {
             const data = await authLogout()
             if (data.success) {
+                toast.success(data.message)
                 dispatch(logout())
                 navigate("/login")
             }
         } catch (error) {
             console.error(error)
+            toast.error(error.message || "something went wrong!")
         }
     }
 

@@ -3,6 +3,7 @@ import smallLogo from "../assets/smallLogo.png"
 import { useNavigate } from 'react-router-dom'
 import { verifyEmail } from "../api/auth.js"
 import Loader from './Loader.jsx'
+import toast from 'react-hot-toast'
 
 function OTP() {
     const navigate = useNavigate()
@@ -17,10 +18,12 @@ function OTP() {
             const data = await verifyEmail(otp)
 
             if (data?.success) {
+                toast.success(data.message)
                 navigate("/login")
             }
         } catch (error) {
             console.error("ERROR:", error)
+            toast.error(error.message || "something went wrong!")
         } finally {
             setLoading(false)
         }
