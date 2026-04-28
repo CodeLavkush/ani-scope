@@ -4,13 +4,50 @@ import smallerCoverImage from "../assets/covers/register_cover_h.jpg"
 import registerCharacter from "../assets/register_character.png"
 import coverImage from "../assets/covers/register_cover.jpg"
 import { Eye, EyeOff } from "lucide-react"
+import { Link, useNavigate } from 'react-router-dom'
+import Loader from "./Loader.jsx"
+import { register } from "../api/auth.js"
 
 function Register() {
     const [seePassword, setSeePassword] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
+    const [formData, setFormData] = useState({
+        username: "",
+        email: "",
+        password: ""
+    })
 
     const handleSeePassword = (e) => {
         e.preventDefault()
         setSeePassword(!seePassword)
+    }
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        try {
+            setLoading(true)
+            const data = await register(formData)
+
+            if (data?.success) {
+                navigate("/verification")
+            }
+        } catch (error) {
+            console.error("ERROR:", error)
+        } finally {
+            formData.username = ""
+            formData.email = ""
+            formData.password = ""
+            setLoading(false)
+        }
     }
     return (
         <div className='w-screen h-screen overflow-hidden'>
@@ -29,18 +66,18 @@ function Register() {
                             <img src={registerCharacter} alt="character" className='object-cover w-40' />
                         </div>
                         <div className='row-span-4'>
-                            <form className='w-full h-full flex justify-center items-center flex-col gap-4'>
+                            <form onSubmit={handleSubmit} className='w-full h-full flex justify-center items-center flex-col gap-4'>
                                 <div className='min-w-120 lg:min-w-100 px-10 flex flex-col justify-center items-start'>
-                                    <label htmlFor="email" className='font-bold font-outfit uppercase'>Username</label>
-                                    <input type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
+                                    <label htmlFor="username" className='font-bold font-outfit uppercase'>Username</label>
+                                    <input name='username' required onChange={handleChange} value={formData.username} type="text" id="username" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
                                 </div>
                                 <div className='min-w-120 lg:min-w-100 px-10 flex flex-col justify-center items-start'>
                                     <label htmlFor="email" className='font-bold font-outfit uppercase'>Email</label>
-                                    <input type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
+                                    <input name='email' required onChange={handleChange} value={formData.email} type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
                                 </div>
                                 <div className='min-w-120 lg:min-w-100 flex flex-col justify-center items-start relative px-10'>
                                     <label htmlFor="password" className='font-bold font-outfit uppercase'>Password</label>
-                                    <input type={`${seePassword ? "text" : "password"}`} id="password" className='border-accent border-4 lg:w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
+                                    <input name='password' required onChange={handleChange} value={formData.password} type={`${seePassword ? "text" : "password"}`} id="password" className='border-accent border-4 lg:w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
                                     <button onClick={handleSeePassword} className='absolute right-8 top-10 lg:right-12 xl:right-14'>
                                         {
                                             seePassword ? <EyeOff /> : <Eye />
@@ -48,13 +85,17 @@ function Register() {
                                     </button>
                                 </div>
                                 <div className='min-w-120 lg:min-w-100 px-10  mt-4 flex justify-center items-start'>
-                                    <button className='bg-accent text-white cursor-pointer font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>Register</button>
+                                    <button className='bg-accent text-white cursor-pointer font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
+                                        {
+                                            loading ? <Loader /> : "Register"
+                                        }
+                                    </button>
                                 </div>
                             </form>
                         </div>
                         <div className='row-span-1'>
                             <div className='row-span-1 flex justify-center items-center'>
-                                <p className='font-bold font-poppins tracking-wider'>Alreay have an account? Login Here</p>
+                                <p className='font-bold font-poppins tracking-wider'>Alreay have an account? <Link to="/login" className='underline'>Login Here</Link></p>
                             </div>
                         </div>
                     </div>
@@ -75,31 +116,35 @@ function Register() {
                             <img src={registerCharacter} alt="Login character" className='object-contain w-40' />
                         </div>
                         <div className='row-span-4'>
-                            <form className='w-full h-full flex justify-center items-center flex-col gap-4'>
+                            <form onSubmit={handleSubmit} className='w-full h-full flex justify-center items-center flex-col gap-4'>
                                 <div className='w-full flex flex-col justify-center items-start px-6 md:px-40'>
-                                    <label htmlFor="email" className='font-bold font-outfit uppercase'>Username</label>
-                                    <input type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] p-2 outline-none' />
+                                    <label htmlFor="username" className='font-bold font-outfit uppercase'>Username</label>
+                                    <input name='username' required onChange={handleChange} value={formData.username} type="text" id="username" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] p-2 outline-none' />
                                 </div>
                                 <div className='w-full flex flex-col justify-center items-start px-6 md:px-40'>
                                     <label htmlFor="email" className='font-bold font-outfit uppercase'>Email</label>
-                                    <input type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] p-2 outline-none' />
+                                    <input name='email' required onChange={handleChange} value={formData.email} type="email" id="email" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] p-2 outline-none' />
                                 </div>
                                 <div className='w-full flex flex-col justify-center items-start relative px-6 md:px-40'>
                                     <label htmlFor="password" className='font-bold font-outfit uppercase'>Password</label>
-                                    <input type={`${seePassword ? "text" : "password"}`} id="password" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
+                                    <input name='password' required onChange={handleChange} value={formData.password} type={`${seePassword ? "text" : "password"}`} id="password" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
                                     <button onClick={handleSeePassword} className='absolute right-8 top-10 md:top-10 md:right-44'>
                                         {
                                             seePassword ? <EyeOff /> : <Eye />
                                         }
                                     </button>
                                 </div>
-                                <div className='w-full flex justify-center items-start px-16 md:px-40'>
-                                    <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>Register</button>
+                                <div className='w-full flex justify-center items-start px-16 md:px-40'> required
+                                    <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
+                                        {
+                                            loading ? <Loader /> : "Register"
+                                        }
+                                    </button>
                                 </div>
                             </form>
                         </div>
                         <div className='row-span-1 flex justify-center items-center'>
-                            <p className='font-bold font-poppins tracking-wide'>Alreay have an account? Login Here</p>
+                            <p className='font-bold font-poppins tracking-wide'>Alreay have an account? <Link to="/login" className='underline'>Login Here</Link></p>
                         </div>
                     </div>
                 </div>

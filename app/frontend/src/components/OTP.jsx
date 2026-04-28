@@ -1,8 +1,31 @@
-import React from 'react'
+import React, { useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
-
+import { useNavigate } from 'react-router-dom'
+import { verifyEmail } from "../api/auth.js"
+import Loader from './Loader.jsx'
 
 function OTP() {
+    const navigate = useNavigate()
+    const [otp, setOtp] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        try {
+            setLoading(true)
+            const data = await verifyEmail(otp)
+
+            if (data?.success) {
+                navigate("/login")
+            }
+        } catch (error) {
+            console.error("ERROR:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className='w-screen h-screen overflow-hidden'>
 
@@ -14,13 +37,17 @@ function OTP() {
                             <img src={smallLogo} alt="logo" className='object-cover w-60' />
                         </div>
                         <div className='row-span-4'>
-                            <form className='w-full h-full flex justify-center items-center flex-col gap-4'>
+                            <form onSubmit={handleSubmit} className='w-full h-full flex justify-center items-center flex-col gap-4'>
                                 <div className='row-span-1 min-w-120 lg:min-w-100 px-10 flex flex-col justify-center items-start'>
                                     <label htmlFor="otp" className='font-bold font-outfit uppercase'>OTP</label>
-                                    <input type="text" id="otp" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
+                                    <input name='otp' maxLength={6} required value={otp} onChange={(e) => setOtp(e.target.value)} type="text" id="otp" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E] outline-none p-2' />
                                 </div>
                                 <div className='row-span-1 min-w-120 lg:min-w-100 px-10  mt-4 flex justify-center items-start'>
-                                    <button className='bg-accent text-white cursor-pointer font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>Verify</button>
+                                    <button className='bg-accent text-white cursor-pointer font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
+                                        {
+                                            loading ? <Loader /> : "Verify"
+                                        }
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -44,10 +71,14 @@ function OTP() {
                             <form className='w-full h-full flex justify-center items-center flex-col gap-4'>
                                 <div className='w-full flex flex-col justify-center items-start'>
                                     <label htmlFor="otp" className='font-bold font-outfit uppercase'>OTP</label>
-                                    <input type="text" id="otp" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E]' />
+                                    <input name='otp' required maxLength={6} type="text" id="otp" className='border-accent border-4 w-full h-14 rounded-md shadow-[4px_4px_0px_0px_#4E361E]' />
                                 </div>
                                 <div className='w-full flex justify-center items-start'>
-                                    <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>Verify</button>
+                                    <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
+                                        {
+                                            loading ? <Loader /> : "Verify"
+                                        }
+                                    </button>
                                 </div>
                             </form>
                         </div>

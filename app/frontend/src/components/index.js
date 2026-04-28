@@ -5,6 +5,7 @@ import Register from "./Register.jsx";
 import OTP from "./OTP.jsx";
 import Profile from "./Profile.jsx";
 import Submission from "./Submission.jsx";
+import Loader from "./Loader.jsx"
 
 
 
@@ -16,4 +17,5 @@ export {
     Profile,
     OTP,
     Submission,
+    Loader
 }
