@@ -1,0 +1,42 @@
+services:
+
+  frontend:
+    build: ./app/frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./app/frontend/.env
+    volumes:
+      - ./app/frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    build: ./app/backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./app/backend/.env
+    volumes:
+      - ./app/backend:/app
+      - /app/node_modules
+
+  worker:
+    build: ./app/backend
+    command: npm run worker
+    volumes:
+      - ./app/backend:/app
+      - /app/node_modules
+    env_file:
+      - ./app/backend/.env
+    depends_on:
+      - backend
+      - python-api
+
+  python-api:
+    build: ./services
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services:/app

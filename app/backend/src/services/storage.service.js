@@ -1,59 +1,46 @@
 import { supabase } from "../config/supabase.js";
-import fs from "fs";
-import path from "path";
+import { Buffer } from "buffer";
 
-export async function uploadBufferToSupabase(file) {
-    try {
-        const fileBuffer = file.buffer;
-        const ext = file.mimetype.split("/")[1];
+async function uploadToSupabase(buffer, fileName, contentType) {
+    const { error } = await supabase.storage
+        .from(process.env.SUPABASE_BUCKET)
+        .upload(fileName, buffer, {
+            contentType,
+            upsert: true,
+        });
 
-        const fileName = `${Date.now()}.${ext}`;
+    if (error) throw new Error(error.message);
 
-        const { error } = await supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .upload(fileName, fileBuffer, {
-                contentType: file.mimetype,
-            });
+    const { data } = supabase.storage
+        .from(process.env.SUPABASE_BUCKET)
+        .getPublicUrl(fileName);
 
-        if (error) throw error;
-
-        const { data } = supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .getPublicUrl(fileName);
-
-        return data.publicUrl;
-
-    } catch (error) {
-        throw new Error(error.message);
-    }
+    return data.publicUrl;
 }
 
-export async function uploadPathToSupabase(filePath) {
-    try {
-        const fileBuffer = fs.readFileSync(filePath);
-
-        const ext = path.extname(filePath).toLowerCase();
-
-        let contentType = "image/jpeg";
-        if (ext === ".webp") contentType = "image/webp";
-        else if (ext === ".png") contentType = "image/png";
-        else if (ext === ".avif") contentType = "image/avif";
-
-        const fileName = `${Date.now()}-${path.basename(filePath)}`;
-
-        const { error } = await supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .upload(fileName, fileBuffer, { contentType });
-
-        if (error) throw error;
-
-        const { data } = supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .getPublicUrl(fileName);
-
-        return data.publicUrl;
-
-    } catch (error) {
-        throw new Error(error.message);
+export async function uploadBufferToSupabase(file) {
+    if (!file?.buffer) {
+        throw new Error("Invalid file buffer");
     }
+
+    const buffer = file.buffer;
+
+    const ext = file.mimetype?.split("/")[1] || "jpg";
+    const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.${ext}`;
+
+    return uploadToSupabase(buffer, fileName, file.mimetype);
+}
+
+export async function uploadBase64ToSupabase(base64, prefix = "img") {
+    if (!base64) {
+        throw new Error("Invalid base64 data");
+    }
+
+    const buffer = Buffer.from(base64, "base64");
+
+    const fileName = `${Date.now()}-${prefix}.webp`;
+
+    return uploadToSupabase(buffer, fileName, "image/webp");
 }
