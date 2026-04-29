@@ -99,7 +99,16 @@ const getMovies = asyncHandler(async (req, res) => {
     const nextCursor = movies.length > 0 ? movies[movies.length - 1]._id.toString() : null;
 
     if (movies.length === 0) {
-        throw new ApiError(404, "Movies not found")
+        return res.json(
+            new ApiResponse(
+                200,
+                {
+                    data: [],
+                    cursor: null,
+                },
+                "No more movies"
+            )
+        )
     }
 
     return res

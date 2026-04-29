@@ -47,7 +47,7 @@ function Lists() {
                     </div>
                     <div className='row-span-7 flex flex-col justify-center gap-4 p-4 overflow-y-auto pt-12'>
                         {movies?.map((movie) => (
-                            <div key={movie.title} className='bg-btn w-full flex justify-start items-start rounded-xl hover:border-accent hover:border-2 hover:scale-90 cursor-pointer transition-all'>
+                            <div key={movie._id} className='bg-btn w-full flex justify-start items-start rounded-xl hover:border-accent hover:border-2 hover:scale-90 cursor-pointer transition-all'>
                                 <div className='h-full'>
                                     <img src={movie.poster.small} alt={movie.title} className='object-cover rounded-xl' />
                                 </div>
@@ -86,7 +86,7 @@ function Lists() {
                     </div>
                     <div className='row-span-7 flex flex-wrap justify-center gap-4 p-4 overflow-y-auto'>
                         {movies?.map((movie) => (
-                            <div key={movie.title} className='bg-btn w-60 h-68 pb-4 relative flex justify-end items-start px-12 flex-col'>
+                            <div key={movie._id} className='bg-btn w-60 h-68 pb-4 relative flex justify-end items-start px-12 flex-col'>
                                 <div className='absolute -top-2 -right-2'>
                                     <img src={movie.poster.small} alt={movie.title} className='object-cover' />
                                 </div>

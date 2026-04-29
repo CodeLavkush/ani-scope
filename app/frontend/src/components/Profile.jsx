@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import Menu from './Menu'
 import { useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
-import { getMovies } from '../api/movie'
+import { deleteMovie, getMovies } from '../api/movie'
 
 function Profile() {
     const [menuVisible, setMenuVisible] = useState(false)
@@ -42,6 +42,17 @@ function Profile() {
         fetchMovies()
     }, [])
 
+    const handleDelete = async (id) => {
+        try {
+            const deletedMovie = await deleteMovie(id)
+            if (deletedMovie.success) {
+                setMovies((prev) => prev.filter((movie) => movie._id !== id))
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
         <div className='w-screen h-screen overflow-hidden'>
             {/* larger screens */}
@@ -55,14 +66,15 @@ function Profile() {
                         <div className={`row-span-7 flex ${movies.length < 14 ? "flex-col" : null} flex-wrap justify gap-4 p-4 overflow-y-auto`}>
                             {movies.length === 0 ? (<p className='text-center content-center w-full h-full text-xl text-accent font-outfit uppercase font-bold tracking-wider'>You don't have any edits yet..</p>) : movies.map((movie) => (
                                 <div
-                                    key={movie.title}
-                                    className="w-[calc(20%-0.5rem)] aspect-square overflow-hidden rounded-xl hover:scale-90 transition-all cursor-pointer"
+                                    key={movie._id}
+                                    className="w-[calc(40%-0.5rem)] xl:w-[calc(26%-0.5rem)] aspect-square overflow-hidden rounded-xl hover:scale-90 transition-all cursor-pointer"
                                 >
                                     <img
                                         src={movie.poster.small}
                                         alt={movie.title}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-34 object-cover"
                                     />
+                                    <button onClick={() => handleDelete(movie._id)} className='w-full bg-red-400 text-white font-bold uppercase tracking-wider cursor-pointer'>Delete</button>
                                 </div>
                             ))}
                         </div>
@@ -122,19 +134,20 @@ function Profile() {
                         <div className={`row-span-6 flex ${movies.length < 6 ? "flex-col" : null} flex-wrap justify-center gap-4 p-4 overflow-y-auto`}>
                             {movies.length === 0 ? (<p className='text-center content-center w-full h-full text-xl text-accent font-outfit uppercase font-bold tracking-wider'>You don't have any edits yet..</p>) : movies.map((movie) => (
                                 <div
-                                    key={movie.title}
+                                    key={movie._id}
                                     className="w-[calc(40%-0.5rem)] md:w-[calc(20%-0.5rem)] aspect-square overflow-hidden rounded-xl hover:scale-90 transition-all cursor-pointer"
                                 >
                                     <img
                                         src={movie.poster.large}
                                         alt={movie.title}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-20 object-cover"
                                     />
+                                    <button onClick={() => handleDelete(movie._id)} className='w-full bg-red-400 text-white font-bold uppercase tracking-wider cursor-pointer'>Delete</button>
                                 </div>
                             ))}
                         </div>
                         <div className='row-span-1 flex justify-center items-center border-t-2'>
-                            <Link to="/submission" className='font-bold font-outfit tracking-wider bg-accent cursor-pointer text-white uppercase px-10 py-4 rounded-md text-xl' >Add Edit</Link>
+                            <Link to="/submission" className='font-bold font-outfit tracking-wider bg-accent cursor-pointer text-white uppercase px-10 py-4 rounded-md text-xl' >Submission</Link>
                         </div>
                     </div>
                 </div>

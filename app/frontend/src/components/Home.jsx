@@ -1,15 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import largeLogo from "../assets/largeLogo.png"
-import largeBg from "../assets/mainBg.png"
 import overlayBg from "../assets/overlay_bg.png"
 import { Link, useNavigate } from "react-router-dom"
 import { Menu as MenuIcon, X, ChevronLeft, ChevronRight, FastForward, Cookie } from "lucide-react";
-
-import suzume from "../assets/SUZUME.jpg"
-import yourName from "../assets/yourname.jpg"
-import gardenofwords from "../assets/gardenofwords.jpg"
-import jujutsuKaisen from "../assets/jujutsu_kaisen.jpg"
 
 import { useGSAP } from "@gsap/react"
 import gsap from 'gsap'
@@ -26,6 +20,8 @@ import { getMovies } from '../api/movie'
 
 function Home() {
     const mainContainerRef = useRef()
+    const tweenRef = useRef(null)
+    const scrollRef = useRef(null)
     const authStatus = useSelector((state) => state.auth.status)
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -44,13 +40,31 @@ function Home() {
         if (fetching) return
 
         setFetching(true)
+
         try {
             const res = await getMovies(10, nextCursor)
 
-            setMovies((prev) => [...prev, ...(res?.data.data || [])])
-            setCursor(res?.data?.cursor || null)
+            const newMovies = res?.data?.data || []
+
+            setMovies((prev) => {
+                const map = new Map()
+
+                    ;[...prev, ...newMovies].forEach(movie => {
+                        map.set(movie._id, movie)
+                    })
+
+                return Array.from(map.values())
+            })
+
+            if (newMovies.length === 0) {
+                setCursor(null)
+            } else {
+                setCursor(res?.data?.cursor)
+            }
+
         } catch (error) {
             console.error(error)
+            setCursor(null)
         } finally {
             setFetching(false)
             setLoading(false)
@@ -67,8 +81,12 @@ function Home() {
         setCurrentIndex(nextIndex)
 
 
-        if (currentIndex >= movies.length - 2 && cursor) {
-            fetchMovies(cursor)
+        if (
+            currentIndex >= movies.length - 2 &&
+            cursor &&
+            !fetching
+        ) {
+            await fetchMovies(cursor)
         }
     }
 
@@ -130,116 +148,91 @@ function Home() {
     }
 
     useGSAP(() => {
-        const tl = gsap.timeline();
+        if (!mainContainerRef.current) return
 
-        tl.from(mainContainerRef.current, {
-            opacity: 0,
-            duration: 0.5
-        })
-            .from(".nav-item", {
-                y: -50,
+        const ctx = gsap.context(() => {
+
+            const q = gsap.utils.selector(mainContainerRef.current)
+
+            const animateIfExists = (selector, animation) => {
+                const el = q(selector)
+                if (el.length) {
+                    gsap.from(el, animation)
+                }
+            }
+
+            // Base
+            gsap.from(mainContainerRef.current, {
                 opacity: 0,
-                duration: 0.6,
-                stagger: 0.1
+                duration: 0.5
             })
-            .from(".year", {
-                y: 40,
-                opacity: 0,
-                duration: 0.5
-            }, "-=0.3")
-            .from(".genre", {
-                y: 40,
-                opacity: 0,
-                duration: 0.5
-            }, "-=0.3")
-            .from(".hero-title", {
-                x: -100,
-                opacity: 0,
-                duration: 0.8
-            }, "-=0.3")
-            .from(".hero-desc", {
-                y: 50,
-                opacity: 0,
-                duration: 0.6
-            }, "-=0.4")
-            .from(".tag-item", {
-                y: 20,
-                opacity: 0,
-                stagger: 0.1,
-                duration: 0.4
-            }, "-=0.3")
-            .from(".card", {
-                scale: 0.8,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.2,
-                ease: "back.out(1.7)"
-            }, "-=0.3");
 
-        // Mobile animations
-        gsap.from(".mobile-hero-img", {
-            scale: 1.2,
-            opacity: 0,
-            duration: 0.8,
-            ease: "power3.out"
-        });
+            // Desktop
+            animateIfExists(".nav-item", { y: -50, opacity: 0, stagger: 0.1 })
+            animateIfExists(".hero-title", { x: -100, opacity: 0 })
+            animateIfExists(".hero-desc", { y: 50, opacity: 0 })
+            animateIfExists(".tag-item", { y: 20, opacity: 0, stagger: 0.1 })
+            animateIfExists(".card", { scale: 0.8, opacity: 0, stagger: 0.2 })
 
-        gsap.from(".mobile-year", {
-            x: -30,
-            opacity: 0,
-            duration: 0.4
-        });
+            // Mobile
+            animateIfExists(".mobile-hero-img", { scale: 1.2, opacity: 0 })
+            animateIfExists(".mobile-year", { x: -30, opacity: 0 })
+            animateIfExists(".mobile-genre", { x: -30, opacity: 0 })
+            animateIfExists(".mobile-tag", { y: 20, opacity: 0 })
+            animateIfExists(".mobile-title", { y: 30, opacity: 0 })
+            animateIfExists(".mobile-desc", { y: 30, opacity: 0 })
+            animateIfExists(".mobile-controls", { y: 50, opacity: 0 })
 
-        gsap.from(".mobile-genre", {
-            x: -30,
-            opacity: 0,
-            duration: 0.4,
-            delay: 0.1
-        });
+        }, mainContainerRef)
 
-        gsap.from(".mobile-tag", {
-            y: 20,
-            opacity: 0,
-            stagger: 0.1,
-            duration: 0.3,
-            delay: 0.2
-        });
+        return () => ctx.revert()
+    }, [])
 
-        gsap.from(".mobile-title", {
-            y: 30,
-            opacity: 0,
-            duration: 0.5,
-            delay: 0.3
-        });
+    useEffect(() => {
+        if (!movies.length) return
 
-        gsap.from(".mobile-desc", {
-            y: 30,
-            opacity: 0,
-            duration: 0.5,
-            delay: 0.5
-        });
+        const track = document.querySelector(".movie-track")
+        if (!track) return
 
-        gsap.from(".mobile-controls", {
-            y: 50,
-            opacity: 0,
-            duration: 0.5,
-            delay: 0.7
-        });
+        const distance = track.scrollHeight
+
+        tweenRef.current = gsap.to(track, {
+            y: -distance / 2,
+            duration: 20,
+            ease: "none",
+            repeat: -1,
+            yoyo: true
+        })
+
+        return () => {
+            tweenRef.current?.kill()
+        }
+    }, [movies])
+
+    const handleEnter = () => tweenRef.current?.pause()
+    const handleLeave = () => tweenRef.current?.resume()
+
+    useEffect(() => {
+        const container = mainContainerRef.current
+        if (!container) return
 
 
-        gsap.utils.toArray(".card").forEach((card) => {
-            card.addEventListener("mouseenter", () => {
-                gsap.to(card, { scale: 1.05, duration: 0.3 });
-            });
-            card.addEventListener("mouseleave", () => {
-                gsap.to(card, { scale: 1, duration: 0.3 });
-            });
-        });
-    }, { scope: mainContainerRef })
+
+        container.addEventListener("mouseenter", handleEnter)
+        container.addEventListener("mouseleave", handleLeave)
+
+        return () => {
+            container.removeEventListener("mouseenter", handleEnter)
+            container.removeEventListener("mouseleave", handleLeave)
+        }
+    }, [])
 
 
     if (loading) return <Loader />
-    if (!movies.length) return <div className="text-accent text-xl font-bold font-poppins tracking-wider">No movies found</div>
+    if (!movies.length) return <div className=" bg-primary w-screen h-screen flex justify-center items-center flex-col">
+        <p className='text-accent text-xl font-bold font-outfit tracking-wider'>No movies found</p>
+        <Link to="/profile" className='text-md font-medium tracking-widest font-poppins text-accent underline'>Profile</Link>
+    </div>
 
     return (
         <div ref={mainContainerRef} className='w-screen h-screen overflow-hidden relative'>
@@ -266,7 +259,7 @@ function Home() {
                     </div>
                     <div className='row-span-1'></div>
                     <div className='lg:row-span-1 xl:row-span-2 flex justify-start items-start gap-2 flex-wrap'>
-                        {currentMovie?.tags.map((value, index) => (
+                        {currentMovie?.tags?.map((value, index) => (
                             <p key={index} className='tag-item font-poppins text-white lg:text-sm xl:text-md uppercase font-bold tracking-widest'>{value}</p>
                         ))}
                     </div>
@@ -298,16 +291,18 @@ function Home() {
                         }
                     </div>
                 </div>
-                <div className='col-span-4'>
-                    <div className='movie-scroll inset-0 backdrop-blur-md bg-white/1 w-full h-full flex flex-col lg:justify-center xl:justify-start items-center p-6 gap-8 overflow-y-scroll'>
-                        {
-                            movies.map((movie, index) => (
-                                <div onClick={() => setCurrentIndex(index)} key={movie.title} className='card border-2 border-white lg:w-60 xl:w-80 shadow-[8px_12px_0px_0px_#ffffff] cursor-pointer relative'>
-                                    <img src={movie.poster.large} className='object-cover w-full h-full' alt={movie.title} />
-                                    <p className='absolute top-0 right-2 font-bold uppercase text-white'>{movie.title}</p>
-                                </div>
-                            ))
-                        }
+                <div className='col-span-4 h-full overflow-hidden'>
+                    <div onMouseEnter={handleEnter} onMouseLeave={handleLeave} ref={scrollRef} className='movie-scroll inset-0 backdrop-blur-md bg-white/1 w-full h-full flex flex-col lg:justify-center xl:justify-start items-center p-6 gap-8'>
+                        <div className='movie-track flex flex-col gap-8'>
+                            {
+                                movies.map((movie, index) => (
+                                    <div onClick={() => setCurrentIndex(index)} key={movie._id} className='card border-2 border-white lg:w-60 xl:w-80 shadow-[8px_12px_0px_0px_#ffffff] cursor-pointer relative'>
+                                        <img src={movie.poster.large} className='object-cover w-full h-full' alt={movie.title} />
+                                        <p className='absolute top-0 right-2 font-bold uppercase text-white'>{movie.title}</p>
+                                    </div>
+                                ))
+                            }
+                        </div>
                     </div>
                 </div>
                 <div className='col-span-1'></div>

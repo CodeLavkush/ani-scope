@@ -60,22 +60,29 @@ function Submission() {
     function throwInputFieldError(field, value, message) {
         if (field > value) {
             toast.error(message)
-            return
+            return true
         }
+        return false
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        throwInputFieldError(formData.title.length, 30, "Title is too long.")
-        throwInputFieldError(formData.description.length, 200, "Description is too long.")
-        throwInputFieldError(formData.releaseYear.length, 4, "Year must 4 digits long.")
-        throwInputFieldError(formData.genre.length, 10, "Genre is too long.")
+        if (
+            throwInputFieldError(formData.title.length, 30, "Title is too long.") ||
+            throwInputFieldError(formData.description.length, 200, "Description is too long.") ||
+            throwInputFieldError(formData.releaseYear.length, 4, "Year must be 4 digits.") ||
+            throwInputFieldError(formData.genre.length, 10, "Genre is too long.")
+        ) {
+            return;
+        }
 
         let tags = formData.tags.split(",")
-        let trimmedTags = tags.map((tag) => tag.trim())
+        let trimmedTags = tags.map(tag => tag.trim())
 
-        throwInputFieldError(trimmedTags.length, 4, "Only 4 tags are allowed.")
+        if (throwInputFieldError(trimmedTags.length, 4, "Only 4 tags allowed")) {
+            return;
+        }
 
 
         try {
@@ -90,7 +97,6 @@ function Submission() {
             data.append("tags", formData.tags)
 
             const res = await createMovie(data)
-            console.log(res)
 
             if (res.success) {
                 toast.success(res.message)

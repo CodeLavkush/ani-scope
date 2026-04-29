@@ -70,7 +70,7 @@ function Menu({ authStatus: status, screenType, menuVisible, handleMenu, closeBt
                 {["Home", "About", "Submission", "Lists"].map((value, index) => (
                     <Link to={`/${value.toLowerCase()}`} key={index} className='mobile-link row-span-1 px-8 content-center text-xl font-poppins tracking-wider uppercase font-bold border-b-2 cursor-pointer active:bg-accent active:text-white'>{value}</Link>
                 ))}
-                <div className='row-span-2 flex justify-around items-center gap-10'>
+                <div className='row-span-2 flex justify-start md:justify-around items-center gap-10'>
                     {
                         status ? ["Profile", "Logout"].map((value, index) => {
                             if (value === "Profile") {
