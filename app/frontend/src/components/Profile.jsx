@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import Menu from './Menu'
 import { useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
+import { getMovies } from '../api/movie'
 
 function Profile() {
     const [menuVisible, setMenuVisible] = useState(false)
@@ -12,6 +13,7 @@ function Profile() {
     const userData = useSelector((state) => state.auth.userData)
     const [username, setUsername] = useState(null)
     const [email, setEmail] = useState(null)
+    const [movies, setMovies] = useState([])
 
     const handleMenu = () => {
         setMenuVisible(!menuVisible)
@@ -24,6 +26,20 @@ function Profile() {
 
     useEffect(() => {
         toast.success(`Welcome! ${userData?.username}.`)
+        async function fetchMovies() {
+            try {
+                const data = await getMovies()
+
+                if (data.success) {
+
+                    setMovies(data.data.data.filter((movie) => movie.user === userData._id))
+                }
+
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        fetchMovies()
     }, [])
 
     return (
@@ -36,15 +52,15 @@ function Profile() {
                         <div className='row-span-1 flex items-center px-10'>
                             <p className='font-extrabold font-outfit underline text-4xl uppercase text-accent tracking-wider'>Your edits</p>
                         </div>
-                        <div className='row-span-7 flex flex-wrap justify-center gap-4 p-4 overflow-y-auto'>
-                            {[...Array(100)].map((_, i) => (
+                        <div className={`row-span-7 flex ${movies.length < 14 ? "flex-col" : null} flex-wrap justify gap-4 p-4 overflow-y-auto`}>
+                            {movies.length === 0 ? (<p className='text-center content-center w-full h-full text-xl text-accent font-outfit uppercase font-bold tracking-wider'>You don't have any edits yet..</p>) : movies.map((movie) => (
                                 <div
-                                    key={i}
-                                    className="w-[calc(20%-0.5rem)] aspect-square overflow-hidden"
+                                    key={movie.title}
+                                    className="w-[calc(20%-0.5rem)] aspect-square overflow-hidden rounded-xl hover:scale-90 transition-all cursor-pointer"
                                 >
                                     <img
-                                        src="https://placehold.co/200x200"
-                                        alt=""
+                                        src={movie.poster.small}
+                                        alt={movie.title}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -71,7 +87,7 @@ function Profile() {
                             </div>
                         </div>
                         <div className='row-span-1 flex justify-center items-center'>
-                            <button className='font-bold font-outfit tracking-wider bg-accent text-white uppercase px-10 py-4 cursor-pointer rounded-md text-xl' >Add Edit</button>
+                            <Link to="/submission" className='font-bold font-outfit tracking-wider bg-accent text-white uppercase px-10 py-4 cursor-pointer rounded-md text-xl' >Submission</Link>
                         </div>
                     </div>
                 </div>
@@ -103,22 +119,22 @@ function Profile() {
                         <div className='row-span-1 flex justify-center items-center'>
                             <p className='font-bold font-outfit underline text-2xl uppercase text-accent tracking-wider'>Your edits</p>
                         </div>
-                        <div className="row-span-6 flex flex-wrap justify-center gap-4 p-4 overflow-y-auto">
-                            {[...Array(10)].map((_, i) => (
+                        <div className={`row-span-6 flex ${movies.length < 6 ? "flex-col" : null} flex-wrap justify-center gap-4 p-4 overflow-y-auto`}>
+                            {movies.length === 0 ? (<p className='text-center content-center w-full h-full text-xl text-accent font-outfit uppercase font-bold tracking-wider'>You don't have any edits yet..</p>) : movies.map((movie) => (
                                 <div
-                                    key={i}
-                                    className="w-[calc(50%-0.5rem)] md:w-[calc(30%-0.5rem)] aspect-square overflow-hidden"
+                                    key={movie.title}
+                                    className="w-[calc(40%-0.5rem)] md:w-[calc(20%-0.5rem)] aspect-square overflow-hidden rounded-xl hover:scale-90 transition-all cursor-pointer"
                                 >
                                     <img
-                                        src="https://placehold.co/200x200"
-                                        alt=""
+                                        src={movie.poster.large}
+                                        alt={movie.title}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
                             ))}
                         </div>
                         <div className='row-span-1 flex justify-center items-center border-t-2'>
-                            <button className='font-bold font-outfit tracking-wider bg-accent cursor-pointer text-white uppercase px-10 py-4 rounded-md text-xl' >Add Edit</button>
+                            <Link to="/submission" className='font-bold font-outfit tracking-wider bg-accent cursor-pointer text-white uppercase px-10 py-4 rounded-md text-xl' >Add Edit</Link>
                         </div>
                     </div>
                 </div>

@@ -1,17 +1,34 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import Menu from './Menu'
+import { getMovies } from '../api/movie'
 
 function Lists() {
     const [menuVisible, setMenuVisible] = useState(false)
     const authStatus = useSelector((state) => state.auth.status)
+    const [movies, setMovies] = useState([])
 
     const handleMenu = () => {
         setMenuVisible(!menuVisible)
     }
+    useEffect(() => {
+        async function fetchMovies() {
+            try {
+                const data = await getMovies()
+
+                if (data.success) {
+                    setMovies(data.data.data)
+                }
+
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        fetchMovies()
+    }, [])
     return (
         <div className='w-screen h-screen overflow-hidden'>
             {/* large screens */}
@@ -29,19 +46,19 @@ function Lists() {
                         </div>
                     </div>
                     <div className='row-span-7 flex flex-col justify-center gap-4 p-4 overflow-y-auto pt-12'>
-                        {[...Array(100)].map((_, i) => (
-                            <div key={i} className='bg-btn w-full flex justify-start items-start rounded-xl hover:border-accent hover:border-2 hover:scale-90 cursor-pointer transition-all'>
+                        {movies?.map((movie) => (
+                            <div key={movie.title} className='bg-btn w-full flex justify-start items-start rounded-xl hover:border-accent hover:border-2 hover:scale-90 cursor-pointer transition-all'>
                                 <div className='h-full'>
-                                    <img src="https://placehold.co/200x200" alt="" className='object-cover rounded-xl' />
+                                    <img src={movie.poster.small} alt={movie.title} className='object-cover rounded-xl' />
                                 </div>
                                 <div className='flex justify-start items-start flex-col w-full gap-2'>
                                     <div className='flex justify-start items-center gap-4 py-4 px-4'>
-                                        <p className='text-accent text-xl w-full uppercase font-extrabold font-outfit tracking-wide'>Your Name</p>
-                                        <p className='font-medium font-poppins text-accent'>2018</p>
-                                        <p className='font-medium font-poppins text-accent'>Romance</p>
+                                        <p className='text-accent text-xl w-full uppercase font-extrabold font-outfit tracking-wide'>{movie.title}</p>
+                                        <p className='font-medium font-poppins text-accent'>{movie.releaseYear}</p>
+                                        <p className='font-medium font-poppins text-accent'>{movie.genre}</p>
                                     </div>
                                     <div className='flex justify-start items-center px-4'>
-                                        <p className='font-poppins font-medium tracking-widest text-sm text-accent max-w-600'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem exercitationem hic aliquam animi quaerat impedit, deserunt nam cum amet vel.</p>
+                                        <p className='font-poppins font-medium tracking-widest text-sm text-accent max-w-600'>{movie.description}</p>
                                     </div>
                                 </div>
 
@@ -68,16 +85,16 @@ function Lists() {
                         </div>
                     </div>
                     <div className='row-span-7 flex flex-wrap justify-center gap-4 p-4 overflow-y-auto'>
-                        {[...Array(100)].map((_, i) => (
-                            <div key={i} className='bg-btn w-60 h-68 pb-4 relative flex justify-end items-start px-12 flex-col'>
+                        {movies?.map((movie) => (
+                            <div key={movie.title} className='bg-btn w-60 h-68 pb-4 relative flex justify-end items-start px-12 flex-col'>
                                 <div className='absolute -top-2 -right-2'>
-                                    <img src="https://placehold.co/200x200" alt="" className='object-cover' />
+                                    <img src={movie.poster.small} alt={movie.title} className='object-cover' />
                                 </div>
                                 <div className='flex justify-start items-start w-full flex-col gap-1'>
-                                    <p className='text-accent text-xl w-full uppercase font-extrabold font-outfit tracking-wide'>Your Name</p>
+                                    <p className='text-accent text-xl w-full uppercase font-extrabold font-outfit tracking-wide'>{movie.title}</p>
                                     <div className='flex justify-start items-center gap-4'>
-                                        <p className='font-medium font-poppins text-accent'>2018</p>
-                                        <p className='font-medium font-poppins text-accent'>Romance</p>
+                                        <p className='font-medium font-poppins text-accent'>{movie.releaseYear}</p>
+                                        <p className='font-medium font-poppins text-accent'>{movie.genre}</p>
                                     </div>
                                 </div>
                             </div>

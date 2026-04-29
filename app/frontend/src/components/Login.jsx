@@ -90,7 +90,7 @@ function Login() {
                                 <div className='row-span-1 min-w-120 lg:min-w-100 px-10  mt-4 flex justify-center items-start'>
                                     <button className='bg-accent text-white cursor-pointer font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
                                         {
-                                            loading ? <Loader /> : "Login"
+                                            loading ? <Loader size={50} color="border-red-500" /> : "Login"
                                         }
                                     </button>
                                 </div>
@@ -136,7 +136,7 @@ function Login() {
                                 <div className='w-full flex justify-center items-start px-16 md:px-40'>
                                     <button className='bg-accent text-white font-bold font-poppins tracking-wider w-full h-14 rounded-md uppercase text-xl'>
                                         {
-                                            loading ? <Loader /> : "Login"
+                                            loading ? <Loader size={50} color="border-red-500" /> : "Login"
                                         }
                                     </button>
                                 </div>
