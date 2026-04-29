@@ -1,7 +1,7 @@
 import { apiRequest } from "../utils/apiRequest";
 
 
-const authURL = "/api/v1/auth"
+const authURL = `${import.meta.env.VITE_BACKEND_LINK}/api/v1/auth`
 
 export const register = (user) =>
     apiRequest(`${authURL}/register`, "POST", user);

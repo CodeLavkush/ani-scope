@@ -1,6 +1,6 @@
 import { apiRequest } from "../utils/apiRequest";
 
-const movieUrl = "/api/v1/movies"
+const movieUrl = `${import.meta.env.VITE_BACKEND_LINK}/api/v1/movies`
 
 export const createMovie = async (movieData) => {
     try {
