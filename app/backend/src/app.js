@@ -3,8 +3,11 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import { errorMiddleware } from "./middlewares/error.middleware.js"
 import { rateLimit } from "express-rate-limit"
+import logger from "./utils/logger.js"
 
 const app = express()
+
+app.use(logger)
 
 app.set("trust proxy", 1)
 
@@ -23,6 +26,7 @@ const limiter = rateLimit({
 
 
 app.use(limiter)
+
 
 // basic configurations
 app.use(express.json({ limit: "16kb" }))
