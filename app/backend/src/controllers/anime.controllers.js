@@ -68,7 +68,7 @@ const createAnime = asyncHandler(async (req, res) => {
     const job = await imageQueue.add(
         "image-processing",
         {
-            anime: anime._id.toString(),
+            animeId: anime._id.toString(),
             imageUrl,
         },
     )
