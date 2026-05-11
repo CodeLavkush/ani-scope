@@ -198,7 +198,7 @@ function Home() {
 
         tweenRef.current = gsap.to(track, {
             y: -distance / 2,
-            duration: 20,
+            duration: 22,
             ease: "none",
             repeat: -1,
             yoyo: true

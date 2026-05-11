@@ -2,7 +2,7 @@ import { User } from "../models/user.models.js"
 import { ApiResponse } from "../utils/api-response.js"
 import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/async-handler.js"
-import { Movie } from "../models/movie.models.js"
+import { Anime } from "../models/anime.models.js"
 import mongoose from "mongoose"
 import { uploadBufferToSupabase } from "../services/storage.service.js"
 import { nsfwChecker, evaluateNSFW } from "../services/nsfwChecker.service.js"
@@ -10,8 +10,8 @@ import { imageQueue } from "../queues/image.queues.js"
 import { supabase } from "../config/supabase.js"
 
 
-const createMovie = asyncHandler(async (req, res) => {
-    const { title, description, releaseYear, genre, tags } = req.body;
+const createAnime = asyncHandler(async (req, res) => {
+    const { title, description, releaseYear, genre, tags, isSeries, trailer } = req.body;
 
     if (!title) {
         throw new ApiError(
@@ -48,12 +48,14 @@ const createMovie = asyncHandler(async (req, res) => {
             : tags.split(",").map(tag => tag.trim());
     }
 
-    const movie = await Movie.create({
+    const anime = await Anime.create({
         title,
         description,
         releaseYear,
         genre,
         tags: parsedTags,
+        trailer,
+        isSeries,
         user: new mongoose.Types.ObjectId(req.user?._id),
         poster: {
             master: imageUrl,
@@ -66,7 +68,7 @@ const createMovie = asyncHandler(async (req, res) => {
     const job = await imageQueue.add(
         "image-processing",
         {
-            movieId: movie._id.toString(),
+            anime: anime._id.toString(),
             imageUrl,
         },
     )
@@ -75,14 +77,14 @@ const createMovie = asyncHandler(async (req, res) => {
     return res.json(
         new ApiResponse(
             201,
-            movie,
-            "Movie create successfully"
+            anime,
+            "anime create successfully"
         )
     )
 })
 
 
-const getMovies = asyncHandler(async (req, res) => {
+const getAnime = asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit) || 10
     const cursor = req.query.cursor
 
@@ -92,13 +94,13 @@ const getMovies = asyncHandler(async (req, res) => {
         query._id = { $gt: new mongoose.Types.ObjectId(cursor) }
     }
 
-    const movies = await Movie.find(query)
+    const anime = await Anime.find(query)
         .sort({ _id: 1 })
         .limit(limit)
 
-    const nextCursor = movies.length > 0 ? movies[movies.length - 1]._id.toString() : null;
+    const nextCursor = anime.length > 0 ? anime[anime.length - 1]._id.toString() : null;
 
-    if (movies.length === 0) {
+    if (anime.length === 0) {
         return res.json(
             new ApiResponse(
                 200,
@@ -106,7 +108,7 @@ const getMovies = asyncHandler(async (req, res) => {
                     data: [],
                     cursor: null,
                 },
-                "No more movies"
+                "No more anime"
             )
         )
     }
@@ -116,38 +118,38 @@ const getMovies = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    data: movies,
+                    data: anime,
                     cursor: nextCursor,
                 },
-                "Movies fetched successfully"
+                "Anime fetched successfully"
             )
         )
 
 
 })
 
-const getMovieById = asyncHandler(async (req, res) => {
-    const { movieId } = req.params
+const getAnimeById = asyncHandler(async (req, res) => {
+    const { animeId } = req.params
 
-    const movie = await Movie.findById(movieId)
+    const anime = await Anime.findById(animeId)
 
-    if (!movie) {
-        throw new ApiError(404, "Movie not found")
+    if (!anime) {
+        throw new ApiError(404, "Anime not found")
     }
 
     return res
         .json(
             new ApiResponse(
                 200,
-                movie,
-                "Movie fetched successfully"
+                anime,
+                "Anime fetched successfully"
             )
         )
 })
 
-const updateMovieById = asyncHandler(async (req, res) => {
-    const { title, description, releaseYear, genre, tags } = req.body;
-    const { movieId } = req.params
+const updateAnimeById = asyncHandler(async (req, res) => {
+    const { title, description, releaseYear, genre, tags, trailer, isSeries } = req.body;
+    const { animeId } = req.params
 
     let parsedTags = [];
     if (tags) {
@@ -156,49 +158,51 @@ const updateMovieById = asyncHandler(async (req, res) => {
             : tags.split(",").map(tag => tag.trim());
     }
 
-    const updatedMovie = await Movie.findByIdAndUpdate(
-        movieId,
+    const updatedAnime = await Anime.findByIdAndUpdate(
+        animeId,
         {
             title,
             description,
             releaseYear,
             genre,
             tags: parsedTags,
+            trailer,
+            isSeries,
         },
         {
             returnDocument: "after",
         }
     )
 
-    if (!updatedMovie) {
-        throw new ApiError(404, "Updated movie not found")
+    if (!updatedAnime) {
+        throw new ApiError(404, "Updated anime not found")
     }
 
     return res
         .json(
             new ApiResponse(
                 200,
-                updatedMovie,
-                "Movie information updated successfully"
+                updatedAnime,
+                "Anime information updated successfully"
             )
         )
 })
 
-const deleteMovieById = asyncHandler(async (req, res) => {
-    const { movieId } = req.params;
+const deleteAnimeById = asyncHandler(async (req, res) => {
+    const { animeId } = req.params;
 
-    const movie = await Movie.findById(movieId);
+    const anime = await Anime.findById(animeId);
 
-    if (!movie) {
-        throw new ApiError(404, "Movie not found");
+    if (!anime) {
+        throw new ApiError(404, "Anime not found");
     }
 
     // collect images
     const images = [
-        movie.poster?.master,
-        movie.poster?.small,
-        movie.poster?.medium,
-        movie.poster?.large,
+        anime.poster?.master,
+        anime.poster?.small,
+        anime.poster?.medium,
+        anime.poster?.large,
     ].filter(Boolean);
 
     // convert URLs → file names
@@ -216,17 +220,17 @@ const deleteMovieById = asyncHandler(async (req, res) => {
     }
 
     // delete from DB
-    await Movie.findByIdAndDelete(movieId);
+    await Anime.findByIdAndDelete(animeId);
 
     return res.json(
-        new ApiResponse(200, movie, "Movie deleted successfully")
+        new ApiResponse(200, anime, "anime deleted successfully")
     );
 });
 
 export {
-    createMovie,
-    getMovies,
-    getMovieById,
-    updateMovieById,
-    deleteMovieById,
+    createAnime,
+    getAnime,
+    getAnimeById,
+    updateAnimeById,
+    deleteAnimeById,
 }

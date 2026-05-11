@@ -15,7 +15,7 @@ const worker = new Worker(
     async (job) => {
         const { imageUrl, movieId } = job.data;
 
-        const res = await fetch(process.env.PYTHON_API, {
+        const res = await fetch(process.env.NODE_ENV === "prod" ? process.env.PYTHON_API : "http://localhost:8000", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ imageUrl, movieId }),

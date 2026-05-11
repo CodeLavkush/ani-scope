@@ -38,7 +38,7 @@ const userLoginValidator = () => {
     ]
 }
 
-const movieValidator = () => {
+const animeValidator = () => {
     return [
         body("title")
             .trim()
@@ -58,5 +58,5 @@ const movieValidator = () => {
 export {
     userLoginValidator,
     userRegisterValidator,
-    movieValidator
+    animeValidator
 }

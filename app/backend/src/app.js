@@ -22,11 +22,11 @@ app.use(cors({
 // import the routes
 import healthCheckRouter from "./routes/healthcheck.routes.js"
 import authRouter from "./routes/auth.routes.js"
-import movieRouter from "./routes/movie.routes.js"
+import animeRouter from "./routes/anime.routes.js"
 
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
-app.use("/api/v1/movies", movieRouter)
+app.use("/api/v1/anime", animeRouter)
 
 app.use(errorMiddleware)
 

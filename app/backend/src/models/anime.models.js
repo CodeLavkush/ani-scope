@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const movieSchema = new Schema(
+const animeSchema = new Schema(
     {
         title: {
             type: String,
@@ -19,6 +19,14 @@ const movieSchema = new Schema(
         tags: {
             type: [String],
             default: []
+        },
+        trailer: {
+            type: String,
+            default: ""
+        },
+        isSeries: {
+            type: Boolean,
+            default: false,
         },
         poster: {
             small: {
@@ -57,4 +65,4 @@ const movieSchema = new Schema(
     }
 );
 
-export const Movie = mongoose.model("Movie", movieSchema)
+export const Anime = mongoose.model("Anime", animeSchema)
