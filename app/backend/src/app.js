@@ -2,8 +2,27 @@ import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import { errorMiddleware } from "./middlewares/error.middleware.js"
+import { rateLimit } from "express-rate-limit"
 
 const app = express()
+
+app.set("trust proxy", 1)
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    limit: 100, // max requests per IP
+
+    message: {
+        success: false,
+        message: "Too many requests, please try again later"
+    },
+
+    standardHeaders: true,
+    legacyHeaders: false,
+})
+
+
+app.use(limiter)
 
 // basic configurations
 app.use(express.json({ limit: "16kb" }))
