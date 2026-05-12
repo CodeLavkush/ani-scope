@@ -1,0 +1,425 @@
+openapi: 3.0.0
+
+info:
+  title: Ani Scope API
+  version: 1.0.0
+  description: Anime platform backend API
+
+servers:
+  - url: http://localhost:4000
+
+tags:
+  - name: Healthcheck
+    description: Server health APIs
+
+  - name: Auth
+    description: Authentication APIs
+
+  - name: Anime
+    description: Anime management APIs
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  # =========================
+  # HEALTHCHECK
+  # =========================
+
+  /api/v1/healthcheck:
+    get:
+      tags:
+        - Healthcheck
+
+      summary: Check server health
+
+      responses:
+        "200":
+          description: API is healthy
+
+  # =========================
+  # AUTH ROUTES
+  # =========================
+
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+
+      summary: Register a new user
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - username
+                - email
+                - password
+
+              properties:
+                username:
+                  type: string
+                  example: lavkush
+
+                email:
+                  type: string
+                  example: lavkush@gmail.com
+
+                password:
+                  type: string
+                  example: password123
+
+      responses:
+        "201":
+          description: User registered successfully
+
+        "409":
+          description: User already exists
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+
+      summary: Login user
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                username:
+                  type: string
+                  example: lavkush
+
+                email:
+                  type: string
+                  example: lavkush@gmail.com
+
+                password:
+                  type: string
+                  example: password123
+
+      responses:
+        "200":
+          description: Login successful
+
+        "400":
+          description: Invalid credentials
+
+  /api/v1/auth/verify-email:
+    post:
+      tags:
+        - Auth
+
+      summary: Verify email using OTP
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - otp
+
+              properties:
+                otp:
+                  type: string
+                  example: 123456
+
+      responses:
+        "200":
+          description: Email verified successfully
+
+        "400":
+          description: Invalid or expired OTP
+
+  /api/v1/auth/refresh-token:
+    post:
+      tags:
+        - Auth
+
+      summary: Refresh access token
+
+      responses:
+        "200":
+          description: Access token refreshed
+
+        "401":
+          description: Invalid refresh token
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Auth
+
+      summary: Logout current user
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: User logged out
+
+        "401":
+          description: Unauthorized
+
+  /api/v1/auth/current-user:
+    post:
+      tags:
+        - Auth
+
+      summary: Get current logged in user
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Current user fetched successfully
+
+        "401":
+          description: Unauthorized
+
+  /api/v1/auth/resend-email-verification:
+    post:
+      tags:
+        - Auth
+
+      summary: Resend verification email OTP
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Verification email sent
+
+        "401":
+          description: Unauthorized
+
+  # =========================
+  # ANIME ROUTES
+  # =========================
+
+  /api/v1/anime:
+    get:
+      tags:
+        - Anime
+
+      summary: Get anime list
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+          example: 10
+
+        - in: query
+          name: cursor
+          schema:
+            type: string
+          example: 684f4d61a90dff6f58f1f111
+
+      responses:
+        "200":
+          description: Anime fetched successfully
+
+        "401":
+          description: Unauthorized
+
+    post:
+      tags:
+        - Anime
+
+      summary: Create anime
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - title
+                - poster
+
+              properties:
+                title:
+                  type: string
+                  example: Naruto
+
+                description:
+                  type: string
+                  example: Ninja anime series
+
+                releaseYear:
+                  type: number
+                  example: 2002
+
+                genre:
+                  type: string
+                  example: Action
+
+                tags:
+                  type: string
+                  example: ninja,shounen,adventure
+
+                trailer:
+                  type: string
+                  example: https://youtube.com/watch?v=example
+
+                isSeries:
+                  type: boolean
+                  example: true
+
+                poster:
+                  type: string
+                  format: binary
+
+      responses:
+        "201":
+          description: Anime created successfully
+
+        "400":
+          description: Validation error
+
+        "401":
+          description: Unauthorized
+
+  /api/v1/anime/{animeId}:
+    get:
+      tags:
+        - Anime
+
+      summary: Get anime by ID
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: animeId
+          required: true
+
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Anime fetched successfully
+
+        "404":
+          description: Anime not found
+
+    put:
+      tags:
+        - Anime
+
+      summary: Update anime by ID
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: animeId
+          required: true
+
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                title:
+                  type: string
+                  example: Naruto Shippuden
+
+                description:
+                  type: string
+                  example: Updated anime description
+
+                releaseYear:
+                  type: number
+                  example: 2007
+
+                genre:
+                  type: string
+                  example: Action
+
+                tags:
+                  type: string
+                  example: ninja,shounen
+
+                trailer:
+                  type: string
+                  example: https://youtube.com/watch?v=example
+
+                isSeries:
+                  type: boolean
+                  example: true
+
+      responses:
+        "200":
+          description: Anime updated successfully
+
+        "404":
+          description: Anime not found
+
+    delete:
+      tags:
+        - Anime
+
+      summary: Delete anime by ID
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: animeId
+          required: true
+
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Anime deleted successfully
+
+        "404":
+          description: Anime not found

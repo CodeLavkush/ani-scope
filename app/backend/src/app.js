@@ -4,10 +4,13 @@ import cookieParser from "cookie-parser"
 import { errorMiddleware } from "./middlewares/error.middleware.js"
 import { rateLimit } from "express-rate-limit"
 import logger from "./utils/logger.js"
+import { swaggerUi, swaggerDocument } from "./docs/swagger.js"
 
 const app = express()
 
 app.use(logger)
+
+
 
 app.set("trust proxy", 1)
 
@@ -47,6 +50,7 @@ import healthCheckRouter from "./routes/healthcheck.routes.js"
 import authRouter from "./routes/auth.routes.js"
 import animeRouter from "./routes/anime.routes.js"
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/anime", animeRouter)
