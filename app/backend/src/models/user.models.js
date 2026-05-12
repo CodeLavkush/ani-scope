@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
+import { USER_ROLES } from "../config/constant"
 
 const userSchema = new Schema(
     {
@@ -9,6 +10,21 @@ const userSchema = new Schema(
             type: String,
             required: true,
             trim: true,
+        },
+        gender: {
+            type: String,
+            enum: ["MALE", "FEMALE", "OTHERS"],
+        },
+        age: {
+            type: Number,
+        },
+        role: {
+            type: String,
+            enum: Object.values(USER_ROLES),
+            default: USER_ROLES.USER,
+        },
+        avatar: {
+            type: String,
         },
         email: {
             type: String,
