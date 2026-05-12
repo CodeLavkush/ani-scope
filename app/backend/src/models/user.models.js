@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
-import { USER_ROLES } from "../config/constant"
+import { USER_ROLES } from "../config/constant.js"
 
 const userSchema = new Schema(
     {
@@ -69,7 +69,7 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            email: this.email,
+            role: this.role,
             username: this.username,
         },
         process.env.ACCESS_TOKEN_SECRET,
@@ -80,7 +80,7 @@ userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            email: this.email,
+            role: this.role,
             username: this.username,
         },
         process.env.REFRESH_TOKEN_SECRET,

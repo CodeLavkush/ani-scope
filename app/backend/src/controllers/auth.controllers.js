@@ -5,6 +5,8 @@ import { asyncHandler } from "../utils/async-handler.js"
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js"
 import jwt from "jsonwebtoken"
 import crypto from "crypto"
+import { USER_ROLES } from "../config/constant.js"
+import { uploadBufferToSupabase } from "../services/storage.service.js"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -28,7 +30,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, username, password } = req.body;
+    const { email, username, password, gender, age, avatar } = req.body;
 
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -38,11 +40,19 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists", []);
     }
 
+    if (req.file) {
+        const avatarImageUrl = await uploadBufferToSupabase(req.file)
+    }
+
+
     const user = await User.create({
         email,
         password,
         username,
         isEmailVerified: false,
+        avatar: avatarImageUrl,
+        gender,
+        age,
     })
 
     const { otp, hashedOTP, otpExpiry } = user.generateOTP()
@@ -305,6 +315,140 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
+const getProfiles = asyncHandler(async (req, res) => {
+    const profiles = await User.find().select("-refreshToken -password -otpExpiry -otp")
+
+    if (profiles.length === 0) {
+        throw new ApiError(404, "Profiles not found")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                profiles,
+                "Profiles fetched successfully",
+            )
+        )
+})
+
+const createAdmin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body
+
+    if (!email) {
+        throw new ApiError(400, "Email is required")
+    }
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+        throw new ApiError(400, "User does not exists")
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    if (!isPasswordValid) {
+        throw new ApiError(400, "Invalid credentials")
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
+    const loggedInAdmin = await User.findByIdAndUpdate(
+        user._id,
+        {
+            role: USER_ROLES.ADMIN,
+        },
+        {
+            returnDocument: "after",
+        }
+    ).select(
+        "-password -refreshToken -otp -otpExpiry"
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    }
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInAdmin,
+                    accessToken,
+                    refreshToken,
+                },
+                "Admin logged in successfully"
+            )
+        )
+})
+
+const updateProfile = asyncHandler(async (req, res) => {
+    const { userId } = req.user._id
+
+    if (!userId) {
+        throw new ApiError(404, "User id not found")
+    }
+
+    const { username, gender, age, avatar, email } = req.body
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        {
+            username,
+            gender,
+            age,
+            avatar,
+            email,
+        },
+        {
+            returnDocument: "after",
+        }
+    ).select("-password -refreshToken -otp -otpExpiry")
+
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "User updated successfully",
+            )
+        )
+})
+
+const deleteProfile = asyncHandler(async (req, res) => {
+    const { userId } = req.user._id
+
+    if (!userId) {
+        throw new ApiError(404, "User id not found")
+    }
+
+    const user = await User.findByIdAndDelete(userId).select("-password -refreshToken -otp -otpExpiry")
+
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
+
+    return res
+        .status(200)
+        .json(
+            200,
+            user,
+            "User deleted successfully"
+        )
+})
+
 export {
     registerUser,
     login,
@@ -312,5 +456,9 @@ export {
     getCurrentUser,
     verifyEmail,
     refreshAccessToken,
-    resendEmailVerification
+    resendEmailVerification,
+    createAdmin,
+    updateProfile,
+    deleteProfile,
+    getProfiles,
 }
