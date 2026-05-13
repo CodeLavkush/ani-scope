@@ -398,10 +398,10 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     const updatedUserData = {}
 
-    if (username) updateData.username = username;
-    if (gender) updateData.gender = gender;
-    if (age) updateData.age = age;
-    if (email) updateData.email = email;
+    if (username) updatedUserData.username = username;
+    if (gender) updatedUserData.gender = gender;
+    if (age) updatedUserData.age = age;
+    if (email) updatedUserData.email = email;
 
 
     if (req.file) {
@@ -441,7 +441,7 @@ const updateProfile = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 updatedUser,
-                "User updated successfully",
+                "Profile updated successfully",
             )
         )
 })
@@ -481,7 +481,7 @@ const deleteProfile = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 deletedUser,
-                "User deleted successfully"
+                "Profile deleted successfully"
             )
         )
 })
