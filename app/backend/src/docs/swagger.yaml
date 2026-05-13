@@ -102,13 +102,9 @@ paths:
               type: object
 
               properties:
-                username:
-                  type: string
-                  example: lavkush
-
                 email:
                   type: string
-                  example: lavkush@gmail.com
+                  example: test@mail.com
 
                 password:
                   type: string

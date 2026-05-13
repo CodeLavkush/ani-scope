@@ -19,7 +19,19 @@ const userRegisterValidator = () => {
         body("password")
             .trim()
             .notEmpty()
-            .withMessage("Password is required")
+            .withMessage("Password is required"),
+        body("gender")
+            .trim()
+            .notEmpty()
+            .withMessage("Gender is required"),
+        body("age")
+            .notEmpty()
+            .withMessage("Age is required")
+            .isNumeric()
+            .withMessage("Age must be a number value"),
+        body("avatar")
+            .optional()
+
     ]
 }
 

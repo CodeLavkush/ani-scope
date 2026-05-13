@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import crypto from "crypto"
 import { USER_ROLES } from "../config/constant.js"
 import { uploadBufferToSupabase } from "../services/storage.service.js"
+import { supabase } from "../config/supabase.js"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -30,7 +31,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, username, password, gender, age, avatar } = req.body;
+    const { email, username, password, gender, age } = req.body;
 
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -40,17 +41,14 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists", []);
     }
 
-    if (req.file) {
-        const avatarImageUrl = await uploadBufferToSupabase(req.file)
-    }
-
+    const avatarImageUrl = await uploadBufferToSupabase(req.file)
 
     const user = await User.create({
         email,
         password,
         username,
         isEmailVerified: false,
-        avatar: avatarImageUrl,
+        avatar: avatarImageUrl || '',
         gender,
         age,
     })
@@ -390,29 +388,50 @@ const createAdmin = asyncHandler(async (req, res) => {
 })
 
 const updateProfile = asyncHandler(async (req, res) => {
-    const { userId } = req.user._id
+    const userId = String(req.user._id)
 
     if (!userId) {
         throw new ApiError(404, "User id not found")
     }
 
-    const { username, gender, age, avatar, email } = req.body
+    const { username, gender, age, email } = req?.body
 
-    const user = await User.findByIdAndUpdate(
+    const updatedUserData = {}
+
+    if (username) updateData.username = username;
+    if (gender) updateData.gender = gender;
+    if (age) updateData.age = age;
+    if (email) updateData.email = email;
+
+
+    if (req.file) {
+        const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
+
+        const fileToDelete = user?.avatar.split("/").pop()
+
+        // delete from supabase
+        const { error } = await supabase.storage
+            .from(process.env.SUPABASE_BUCKET)
+            .remove([fileToDelete]);
+
+        if (error) {
+            console.error("Supabase delete error:", error.message);
+        }
+
+        const avatarImageUrl = await uploadBufferToSupabase(req?.file)
+        updatedUserData.avatar = avatarImageUrl
+    }
+
+
+    const updatedUser = await User.findByIdAndUpdate(
         userId,
-        {
-            username,
-            gender,
-            age,
-            avatar,
-            email,
-        },
+        updatedUserData,
         {
             returnDocument: "after",
         }
     ).select("-password -refreshToken -otp -otpExpiry")
 
-    if (!user) {
+    if (!updatedUser) {
         throw new ApiError(404, "User not found")
     }
 
@@ -421,31 +440,49 @@ const updateProfile = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                user,
+                updatedUser,
                 "User updated successfully",
             )
         )
 })
 
 const deleteProfile = asyncHandler(async (req, res) => {
-    const { userId } = req.user._id
+    const userId = String(req.user._id)
 
     if (!userId) {
         throw new ApiError(404, "User id not found")
     }
 
-    const user = await User.findByIdAndDelete(userId).select("-password -refreshToken -otp -otpExpiry")
 
-    if (!user) {
+    const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
+
+    const fileToDelete = user?.avatar.split("/").pop()
+
+    // delete from supabase
+    const { error } = await supabase.storage
+        .from(process.env.SUPABASE_BUCKET)
+        .remove([fileToDelete]);
+
+    if (error) {
+        console.error("Supabase delete error:", error.message);
+    }
+
+
+
+    const deletedUser = await User.findByIdAndDelete(userId).select("-password -refreshToken -otp -otpExpiry")
+
+    if (!deletedUser) {
         throw new ApiError(404, "User not found")
     }
 
     return res
         .status(200)
         .json(
-            200,
-            user,
-            "User deleted successfully"
+            new ApiResponse(
+                200,
+                deletedUser,
+                "User deleted successfully"
+            )
         )
 })
 

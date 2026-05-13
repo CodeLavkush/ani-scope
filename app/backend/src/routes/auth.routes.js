@@ -5,13 +5,14 @@ import { createAdminValidator, userLoginValidator, userRegisterValidator } from 
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { authorizeRoles } from "../middlewares/role.middleware.js"
 import { USER_ROLES } from "../config/constant.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 const router = Router()
 
 // unsecured routes
 router
     .route("/register")
-    .post(userRegisterValidator(), validate, registerUser)
+    .post(upload.single("avatar"), userRegisterValidator(), validate, registerUser)
 
 router
     .route("/login")
@@ -41,12 +42,9 @@ router
     .post(verifyJWT, resendEmailVerification)
 
 router
-    .route("/:userId")
-    .patch(verifyJWT, updateProfile)
-    .delete(verifyJWT, deleteProfile)
-
-router
     .route("/")
     .get(verifyJWT, authorizeRoles(USER_ROLES.ADMIN), getProfiles)
+    .patch(upload.single("avatar"), verifyJWT, updateProfile)
+    .delete(verifyJWT, deleteProfile)
 
 export default router;
