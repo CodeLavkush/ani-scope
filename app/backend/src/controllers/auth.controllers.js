@@ -33,6 +33,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 const registerUser = asyncHandler(async (req, res) => {
     const { email, username, password, gender, age } = req.body;
 
+    let avatarImageUrl = ""
+
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
@@ -41,14 +43,16 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists", []);
     }
 
-    const avatarImageUrl = await uploadBufferToSupabase(req.file)
+    if (req.file) {
+        avatarImageUrl = await uploadBufferToSupabase(req.file)
+    }
 
     const user = await User.create({
         email,
         password,
         username,
         isEmailVerified: false,
-        avatar: avatarImageUrl || '',
+        avatar: avatarImageUrl || "",
         gender,
         age,
     })
