@@ -41,7 +41,7 @@ const createRating = asyncHandler(async (req, res) => {
 
 const getRatings = asyncHandler(async (req, res) => {
 
-    const ratings = await Rating.aggregate(
+    const ratings = await Rating.aggregate([
         {
             $lookup: {
                 from: "animes",
@@ -50,7 +50,7 @@ const getRatings = asyncHandler(async (req, res) => {
                 as: "Ratings",
             }
         },
-    )
+    ])
 
     if (ratings.length === 0) {
         throw new ApiError("Ratings not found")

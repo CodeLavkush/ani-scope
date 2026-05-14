@@ -47,7 +47,7 @@ const addAnime = asyncHandler(async (req, res) => {
 const getAnime = asyncHandler(async (req, res) => {
     const userId = req.user._id
 
-    const watchlists = await Watchlist.aggregate(
+    const watchlists = await Watchlist.aggregate([
         {
             $match: {
                 user: userId,
@@ -83,7 +83,7 @@ const getAnime = asyncHandler(async (req, res) => {
                 },
             },
         },
-    )
+    ])
 
     if (watchlists.length === 0) {
         throw new ApiError(404, "Watchlist has no anime")
