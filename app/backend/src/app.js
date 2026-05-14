@@ -49,11 +49,17 @@ app.use(cors({
 import healthCheckRouter from "./routes/healthcheck.routes.js"
 import authRouter from "./routes/auth.routes.js"
 import animeRouter from "./routes/anime.routes.js"
+import watchlistRouter from "./routes/watchlist.routes.js"
+import reviewRouter from "./routes/review.routes.js"
+import ratingRouter from "./routes/rating.routes.js"
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/anime", animeRouter)
+app.use("/api/v1/watchlist", watchlistRouter)
+app.use("/api/v1/review", reviewRouter)
+app.use("/api/v1/rating", ratingRouter)
 
 app.use(errorMiddleware)
 

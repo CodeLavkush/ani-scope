@@ -115,3 +115,10 @@ const deleteRating = asyncHandler(async (req, res) => {
             )
         )
 })
+
+export {
+    createRating,
+    getRatings,
+    updateRating,
+    deleteRating,
+}

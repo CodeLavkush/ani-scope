@@ -123,3 +123,9 @@ const removeAnime = asyncHandler(async (req, res) => {
             )
         )
 })
+
+export {
+    addAnime,
+    getAnime,
+    removeAnime,
+}

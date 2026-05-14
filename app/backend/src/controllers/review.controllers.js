@@ -140,3 +140,10 @@ const deleteReview = asyncHandler(async (req, res) => {
             )
         )
 })
+
+export {
+    createReview,
+    getReviews,
+    updateReview,
+    deleteReview,
+}
