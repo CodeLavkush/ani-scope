@@ -46,7 +46,7 @@ export async function uploadBase64ToSupabase(base64, prefix = "img") {
 }
 
 export async function deleteImageFromSupbase(file) {
-    const fileToDelete = poster?.split("/").pop()
+    const fileToDelete = file?.split("/").pop()
 
     const { error } = await supabase.storage
         .from(process.env.SUPABASE_BUCKET)

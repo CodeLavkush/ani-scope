@@ -196,7 +196,7 @@ const deleteAnimeById = asyncHandler(async (req, res) => {
     }
 
     // delete poster from supabase
-    await deleteAnimeById(anime.poster)
+    await deleteImageFromSupbase(anime.poster)
 
     // delete from DB
     await Anime.findByIdAndDelete(animeId);
