@@ -16,11 +16,8 @@ router
     .get(getAnime)
 
 router
-    .route("/add-anime/:animeId")
+    .route("/:animeId")
     .post(addAnime)
-
-router
-    .route("/remove-anime/:animeId")
     .delete(removeAnime)
 
 

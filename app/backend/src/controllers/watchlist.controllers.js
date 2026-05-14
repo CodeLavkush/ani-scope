@@ -104,6 +104,12 @@ const removeAnime = asyncHandler(async (req, res) => {
     const { animeId } = req.params
     const userId = req.user._id
 
+    const anime = await Anime.findById(animeId)
+
+    if (!anime) {
+        throw new ApiError(404, "Anime not found")
+    }
+
     const removedAnime = await Watchlist.findOneAndDelete({
         anime: animeId,
         user: userId

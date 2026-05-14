@@ -30,7 +30,7 @@ router
 router
     .route("/:animeId")
     .get(getAnimeById)
-    .put(animeValidator(), validate, updateAnimeById)
+    .patch(animeValidator(), validate, updateAnimeById)
     .delete(deleteAnimeById)
 
 

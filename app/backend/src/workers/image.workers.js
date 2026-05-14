@@ -4,6 +4,7 @@ import { connection } from "../queues/connection.js";
 import { Anime } from "../models/anime.models.js";
 import connectDB from "../db/index.js";
 import dotenv from "dotenv";
+import { supabase } from "../config/supabase.js";
 
 import { uploadBase64ToSupabase } from "../services/storage.service.js";
 
@@ -38,23 +39,32 @@ worker.on("completed", async (job, result) => {
     const { animeId } = job.data;
 
     try {
-        if (!result?.variants) throw new Error("Invalid Python response");
+        if (!result?.poster) throw new Error("Invalid Python response");
 
-        const { small, medium, large } = result.variants;
+        const { poster } = await Anime.findById(animeId)
 
-        const smallUrl = await uploadBase64ToSupabase(small, `${animeId}-small`);
-        const mediumUrl = await uploadBase64ToSupabase(medium, `${animeId}-medium`);
-        const largeUrl = await uploadBase64ToSupabase(large, `${animeId}-large`);
+        const fileToDelete = poster?.split("/").pop()
 
-        await Anime.findByIdAndUpdate(animeId, {
-            $set: {
-                "poster.small": smallUrl,
-                "poster.medium": mediumUrl,
-                "poster.large": largeUrl,
-                "processing.status": "processed",
-                "processing.error": null,
+        const { error } = await supabase.storage
+            .from(process.env.SUPABASE_BUCKET)
+            .remove([fileToDelete]);
+
+        if (error) {
+            console.error("Supabase delete error:", error.message);
+        }
+
+        const posterUrl = await uploadBase64ToSupabase(result?.poster, `${animeId}-poster`);
+
+        const updatedAnime = await Anime.findByIdAndUpdate(
+            animeId,
+            {
+                $set: {
+                    "poster": posterUrl,
+                    "processing.status": "processed",
+                    "processing.error": null,
+                }
             }
-        });
+        );
 
     } catch (err) {
         console.error("❌ Upload/DB error:", err.message);

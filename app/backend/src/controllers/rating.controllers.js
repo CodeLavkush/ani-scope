@@ -41,19 +41,53 @@ const createRating = asyncHandler(async (req, res) => {
 
 const getRatings = asyncHandler(async (req, res) => {
 
+    const { animeId } = req.params
+
+    const anime = await Anime.findById(animeId)
+
+    if (!anime) {
+        throw new ApiError(404, "Anime not found")
+    }
+
     const ratings = await Rating.aggregate([
         {
+            $match: {
+                anime: new mongoose.Types.ObjectId(animeId),
+            },
+        },
+        {
+            $sort: {
+                createdAt: -1,
+            },
+        },
+        {
             $lookup: {
-                from: "animes",
-                localField: "$anime",
-                foreginField: "_id",
-                as: "Ratings",
-            }
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $unwind: "$user",
+        },
+
+        {
+            $project: {
+                _id: 1,
+                createdAt: 1,
+                rate: 1,
+
+                user: {
+                    _id: "$user._id",
+                    username: "$user.username",
+                },
+            },
         },
     ])
 
     if (ratings.length === 0) {
-        throw new ApiError("Ratings not found")
+        throw new ApiError(404, "Ratings not found")
     }
 
     return res

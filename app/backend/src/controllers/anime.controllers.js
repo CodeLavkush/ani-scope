@@ -57,9 +57,7 @@ const createAnime = asyncHandler(async (req, res) => {
         trailer,
         isSeries,
         user: new mongoose.Types.ObjectId(req.user?._id),
-        poster: {
-            master: imageUrl,
-        },
+        poster: imageUrl,
         processing: {
             status: "processing"
         },
@@ -77,8 +75,8 @@ const createAnime = asyncHandler(async (req, res) => {
     return res.json(
         new ApiResponse(
             201,
-            anime,
-            "anime create successfully"
+            null,
+            "Anime created successfully"
         )
     )
 })
@@ -151,24 +149,25 @@ const updateAnimeById = asyncHandler(async (req, res) => {
     const { title, description, releaseYear, genre, tags, trailer, isSeries } = req.body;
     const { animeId } = req.params
 
-    let parsedTags = [];
+    let updatedAnimeData = {};
+
+    if (title) updatedAnimeData.title = title
+    if (description) updatedAnimeData.description = description
+    if (releaseYear) updatedAnimeData.releaseYear = releaseYear
+    if (genre) updatedAnimeData.genre = genre
     if (tags) {
-        parsedTags = Array.isArray(tags)
+        const parsedTags = Array.isArray(tags)
             ? tags
             : tags.split(",").map(tag => tag.trim());
+
+        updatedAnimeData.tags = parsedTags
     }
+    if (trailer) updatedAnimeData.trailer = trailer
+    if (isSeries) updatedAnimeData.isSeries = isSeries
 
     const updatedAnime = await Anime.findByIdAndUpdate(
         animeId,
-        {
-            title,
-            description,
-            releaseYear,
-            genre,
-            tags: parsedTags,
-            trailer,
-            isSeries,
-        },
+        updatedAnimeData,
         {
             returnDocument: "after",
         }
@@ -197,23 +196,13 @@ const deleteAnimeById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Anime not found");
     }
 
-    // collect images
-    const images = [
-        anime.poster?.master,
-        anime.poster?.small,
-        anime.poster?.medium,
-        anime.poster?.large,
-    ].filter(Boolean);
-
     // convert URLs → file names
-    const filesToDelete = images.map((url) =>
-        url.split("/").pop()
-    );
+    const fileToDelete = anime?.poster.split("/").pop()
 
     // delete from supabase
     const { error } = await supabase.storage
         .from(process.env.SUPABASE_BUCKET)
-        .remove(filesToDelete);
+        .remove([fileToDelete]);
 
     if (error) {
         console.error("Supabase delete error:", error.message);

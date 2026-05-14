@@ -39,6 +39,12 @@ const createReview = asyncHandler(async (req, res) => {
 const getReviews = asyncHandler(async (req, res) => {
     const { animeId } = req.params
 
+    const anime = await Anime.findById(animeId)
+
+    if (!anime) {
+        throw new ApiError(404, "Anime not found")
+    }
+
     const reviews = await Review.aggregate([
         {
             $match: {
@@ -65,9 +71,8 @@ const getReviews = asyncHandler(async (req, res) => {
         {
             $project: {
                 _id: 1,
-                review: 1,
-                rating: 1,
                 createdAt: 1,
+                content: 1,
 
                 user: {
                     _id: "$user._id",

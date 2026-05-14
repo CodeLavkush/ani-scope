@@ -13,11 +13,8 @@ const router = Router()
 router.use(verifyJWT)
 
 router
-    .route("/")
-    .get(getRatings)
-
-router
     .route("/:animeId")
+    .get(getRatings)
     .post(createRating)
 
 router

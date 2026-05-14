@@ -29,22 +29,8 @@ const animeSchema = new Schema(
             default: false,
         },
         poster: {
-            small: {
-                type: String,
-                trim: true,
-            },
-            medium: {
-                type: String,
-                trim: true,
-            },
-            large: {
-                type: String,
-                trim: true,
-            },
-            master: {
-                type: String,
-                trim: true,
-            },
+            type: String,
+            trim: true
         },
         processing: {
             status: {
