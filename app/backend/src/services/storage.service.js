@@ -44,3 +44,15 @@ export async function uploadBase64ToSupabase(base64, prefix = "img") {
 
     return uploadToSupabase(buffer, fileName, "image/webp");
 }
+
+export async function deleteImageFromSupbase(file) {
+    const fileToDelete = poster?.split("/").pop()
+
+    const { error } = await supabase.storage
+        .from(process.env.SUPABASE_BUCKET)
+        .remove([fileToDelete]);
+
+    if (error) {
+        console.error("Supabase delete error:", error.message);
+    }
+}

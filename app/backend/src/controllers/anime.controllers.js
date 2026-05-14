@@ -4,10 +4,9 @@ import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import { Anime } from "../models/anime.models.js"
 import mongoose from "mongoose"
-import { uploadBufferToSupabase } from "../services/storage.service.js"
+import { uploadBufferToSupabase, deleteImageFromSupbase } from "../services/storage.service.js"
 import { nsfwChecker, evaluateNSFW } from "../services/nsfwChecker.service.js"
 import { imageQueue } from "../queues/image.queues.js"
-import { supabase } from "../config/supabase.js"
 
 
 const createAnime = asyncHandler(async (req, res) => {
@@ -196,17 +195,8 @@ const deleteAnimeById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Anime not found");
     }
 
-    // convert URLs → file names
-    const fileToDelete = anime?.poster.split("/").pop()
-
-    // delete from supabase
-    const { error } = await supabase.storage
-        .from(process.env.SUPABASE_BUCKET)
-        .remove([fileToDelete]);
-
-    if (error) {
-        console.error("Supabase delete error:", error.message);
-    }
+    // delete poster from supabase
+    await deleteAnimeById(anime.poster)
 
     // delete from DB
     await Anime.findByIdAndDelete(animeId);

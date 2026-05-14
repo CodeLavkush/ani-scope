@@ -4,9 +4,8 @@ import { connection } from "../queues/connection.js";
 import { Anime } from "../models/anime.models.js";
 import connectDB from "../db/index.js";
 import dotenv from "dotenv";
-import { supabase } from "../config/supabase.js";
 
-import { uploadBase64ToSupabase } from "../services/storage.service.js";
+import { uploadBase64ToSupabase, deleteImageFromSupbase } from "../services/storage.service.js";
 
 dotenv.config();
 await connectDB();
@@ -43,15 +42,7 @@ worker.on("completed", async (job, result) => {
 
         const { poster } = await Anime.findById(animeId)
 
-        const fileToDelete = poster?.split("/").pop()
-
-        const { error } = await supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .remove([fileToDelete]);
-
-        if (error) {
-            console.error("Supabase delete error:", error.message);
-        }
+        await deleteImageFromSupbase(poster)
 
         const posterUrl = await uploadBase64ToSupabase(result?.poster, `${animeId}-poster`);
 

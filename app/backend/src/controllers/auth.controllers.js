@@ -6,8 +6,7 @@ import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js"
 import jwt from "jsonwebtoken"
 import crypto from "crypto"
 import { USER_ROLES } from "../config/constant.js"
-import { uploadBufferToSupabase } from "../services/storage.service.js"
-import { supabase } from "../config/supabase.js"
+import { uploadBufferToSupabase, deleteImageFromSupbase } from "../services/storage.service.js"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -411,16 +410,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     if (req.file) {
         const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
 
-        const fileToDelete = user?.avatar.split("/").pop()
-
-        // delete from supabase
-        const { error } = await supabase.storage
-            .from(process.env.SUPABASE_BUCKET)
-            .remove([fileToDelete]);
-
-        if (error) {
-            console.error("Supabase delete error:", error.message);
-        }
+        await deleteImageFromSupbase(user?.avatar)
 
         const avatarImageUrl = await uploadBufferToSupabase(req?.file)
         updatedUserData.avatar = avatarImageUrl
@@ -460,18 +450,7 @@ const deleteProfile = asyncHandler(async (req, res) => {
 
     const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
 
-    const fileToDelete = user?.avatar.split("/").pop()
-
-    // delete from supabase
-    const { error } = await supabase.storage
-        .from(process.env.SUPABASE_BUCKET)
-        .remove([fileToDelete]);
-
-    if (error) {
-        console.error("Supabase delete error:", error.message);
-    }
-
-
+    await deleteImageFromSupbase(user?.avatar)
 
     const deletedUser = await User.findByIdAndDelete(userId).select("-password -refreshToken -otp -otpExpiry")
 
