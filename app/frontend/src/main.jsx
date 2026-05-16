@@ -13,9 +13,9 @@ import {
   Profile,
   Lists,
   Submission,
-  Protected,
   About
-} from "./components/index.js"
+} from "./pages"
+import { Protected } from "./components"
 
 
 const router = createBrowserRouter([

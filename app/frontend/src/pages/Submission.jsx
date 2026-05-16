@@ -4,10 +4,10 @@ import coverImage from "../assets/covers/submission_cover.jpg"
 import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import Menu from './Menu'
-import { createMovie } from '../api/movie'
+import { Menu } from '../components'
+import { createMovie } from '../api/movie.js'
 import toast from 'react-hot-toast'
-import Loader from "./Loader.jsx"
+import { Loader } from "../components"
 
 function Submission() {
     const [preview, setPreview] = useState(null);

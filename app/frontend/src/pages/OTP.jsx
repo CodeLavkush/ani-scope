@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import { useNavigate } from 'react-router-dom'
 import { verifyEmail } from "../api/auth.js"
-import Loader from './Loader.jsx'
+import { Loader } from '../components'
 import toast from 'react-hot-toast'
 
 function OTP() {

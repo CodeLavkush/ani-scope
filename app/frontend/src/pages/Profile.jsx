@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import smallLogo from "../assets/smallLogo.png"
 import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
-import Menu from './Menu'
+import { Menu } from '../components'
 import { useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
 import { deleteMovie, getMovies } from '../api/movie'

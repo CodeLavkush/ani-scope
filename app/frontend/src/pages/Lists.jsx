@@ -3,7 +3,7 @@ import smallLogo from "../assets/smallLogo.png"
 import { Menu as MenuIcon, X } from "lucide-react"
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import Menu from './Menu'
+import { Menu } from '../components'
 import { getMovies } from '../api/movie'
 
 function Lists() {

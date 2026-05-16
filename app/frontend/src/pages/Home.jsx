@@ -9,13 +9,13 @@ import { useGSAP } from "@gsap/react"
 import gsap from 'gsap'
 
 import { useSelector } from 'react-redux'
-import Menu from './Menu'
+import { Menu } from '../components'
 
 import { logout as authLogout } from '../api/auth'
 import { useDispatch } from 'react-redux'
 import { logout } from '../store/authSlice'
 import toast from 'react-hot-toast'
-import Loader from './Loader'
+import { Loader } from '../components'
 import { getMovies } from '../api/movie'
 
 function Home() {
