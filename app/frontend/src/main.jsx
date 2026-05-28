@@ -11,9 +11,9 @@ import {
   Login,
   OTP,
   Profile,
-  Lists,
-  Submission,
-  About
+  Explore,
+  Watchlist,
+  Anime,
 } from "./pages"
 import { Protected } from "./components"
 
@@ -23,10 +23,34 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { index: true, element: <Login /> },
-      { path: "login", element: <Login /> },
-      { path: "register", element: <Register /> },
-      { path: "verification", element: <OTP /> },
+      {
+        index: true, element: (
+          <Protected authentication>
+            <Home />
+          </Protected>
+        )
+      },
+      {
+        path: "login", element: (
+          <Protected authentication={false}>
+            <Login />
+          </Protected>
+        )
+      },
+      {
+        path: "register", element: (
+          <Protected authentication={false}>
+            <Register />
+          </Protected>
+        )
+      },
+      {
+        path: "verification", element: (
+          <Protected authentication={false}>
+            <OTP />
+          </Protected>
+        )
+      },
       {
         path: "home", element: (
           <Protected authentication>
@@ -34,7 +58,20 @@ const router = createBrowserRouter([
           </Protected>
         )
       },
-      { path: "about", element: <About /> },
+      {
+        path: "explore", element: (
+          <Protected authentication>
+            <Explore />
+          </Protected>
+        )
+      },
+      {
+        path: "watchlist", element: (
+          <Protected authentication>
+            <Watchlist />
+          </Protected>
+        )
+      },
       {
         path: "profile", element: (
           <Protected authentication>
@@ -43,16 +80,9 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: "lists", element: (
+        path: "anime/:animeId", element: (
           <Protected authentication>
-            <Lists />
-          </Protected>
-        )
-      },
-      {
-        path: "submission", element: (
-          <Protected authentication>
-            <Submission />
+            <Anime />
           </Protected>
         )
       },

@@ -1,365 +1,355 @@
-import React, { useEffect, useRef, useState } from 'react'
-import smallLogo from "../assets/smallLogo.png"
-import largeLogo from "../assets/largeLogo.png"
-import overlayBg from "../assets/overlay_bg.png"
-import { Link, useNavigate } from "react-router-dom"
-import { Menu as MenuIcon, X, ChevronLeft, ChevronRight, FastForward, Cookie } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Star, MessageSquare } from "lucide-react";
+import toast from "react-hot-toast";
+import { getAnimeList } from "../api/anime";
+import { addToWatchlist, removeFromWatchlist, getWatchlist } from "../api/watchlist";
+import { createReview } from "../api/review";
+import posterFallback from "../assets/dummy/poster.jpg";
+import largerlogo from "../assets/logo-larger.png";
+import smallerlogo from "../assets/logo-smaller.png";
+import ToggleMenu from "../components/ToggleMenu";
+import Input from "../components/Input";
 
-import { useGSAP } from "@gsap/react"
-import gsap from 'gsap'
+export default function Home() {
+    const navigate = useNavigate();
+    const [featuredAnime, setFeaturedAnime] = useState(null);
+    const [inWatchlist, setInWatchlist] = useState(false);
+    const [reviewContent, setReviewContent] = useState("");
+    const [reviewLoading, setReviewLoading] = useState(false);
 
-import { useSelector } from 'react-redux'
-import { Menu } from '../components'
+    // Default static data if database is empty
+    const defaultData = {
+        _id: "your_name_fallback",
+        year: "2016",
+        genre: "Romance",
+        isSeries: false,
+        title: "Your Name",
+        description:
+            "Two teenagers share a profound, magical connection upon discovering they are swapping bodies. Things manage to become even more complicated when the boy and girl decide to meet in person.",
+        tags: ["Magical", "Teenage", "High School"],
+        trailer: "x7uLutVRBfI", // Youtube video ID
+        poster: posterFallback,
+    };
 
-import { logout as authLogout } from '../api/auth'
-import { useDispatch } from 'react-redux'
-import { logout } from '../store/authSlice'
-import toast from 'react-hot-toast'
-import { Loader } from '../components'
-import { getMovies } from '../api/movie'
-
-function Home() {
-    const mainContainerRef = useRef()
-    const tweenRef = useRef(null)
-    const scrollRef = useRef(null)
-    const authStatus = useSelector((state) => state.auth.status)
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
-    const [menuVisible, setMenuVisible] = useState(false)
-
-    // movies
-    const [movies, setMovies] = useState([])
-    const [currentIndex, setCurrentIndex] = useState(0)
-    const [cursor, setCursor] = useState("")
-    const [loading, setLoading] = useState(true)
-    const [fetching, setFetching] = useState(false)
-
-
-    //fetch movies
-    const fetchMovies = async (nextCursor = "") => {
-        if (fetching) return
-
-        setFetching(true)
-
-        try {
-            const res = await getMovies(10, nextCursor)
-
-            const newMovies = res?.data?.data || []
-
-            setMovies((prev) => {
-                const map = new Map()
-
-                    ;[...prev, ...newMovies].forEach(movie => {
-                        map.set(movie._id, movie)
-                    })
-
-                return Array.from(map.values())
-            })
-
-            if (newMovies.length === 0) {
-                setCursor(null)
-            } else {
-                setCursor(res?.data?.cursor)
-            }
-
-        } catch (error) {
-            console.error(error)
-            setCursor(null)
-        } finally {
-            setFetching(false)
-            setLoading(false)
-        }
-    }
+    const data = featuredAnime || defaultData;
 
     useEffect(() => {
-        fetchMovies()
-    }, [])
-
-    // navigation
-    const handleNext = async () => {
-        const nextIndex = (currentIndex + 1) % movies.length
-        setCurrentIndex(nextIndex)
-
-
-        if (
-            currentIndex >= movies.length - 2 &&
-            cursor &&
-            !fetching
-        ) {
-            await fetchMovies(cursor)
-        }
-    }
-
-    const handlePrev = () => {
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1)
-        }
-    }
-
-    const currentMovie = movies[currentIndex]
-
-    // Animation on change
-    useEffect(() => {
-        if (!currentMovie) return
-
-        gsap.fromTo(".mobile-hero-img",
-            { opacity: 0, scale: 1.1 },
-            { opacity: 1, scale: 1, duration: 0.5 }
-        )
-    }, [currentIndex])
-
-    const handleMenu = () => {
-        const tl = gsap.timeline();
-
-        if (!menuVisible) {
-            setMenuVisible(true);
-            tl.fromTo(".mobile-menu",
-                { x: "100%" },
-                { x: "0%", duration: 0.5, ease: "power3.out" }
-            )
-                .from(".mobile-link", {
-                    x: 50,
-                    opacity: 0,
-                    stagger: 0.1,
-                    duration: 0.3
-                }, "-=0.2");
-        } else {
-            tl.to(".mobile-menu", {
-                x: "100%",
-                duration: 0.4,
-                ease: "power3.in",
-                onComplete: () => setMenuVisible(false)
-            });
-        }
-    }
-
-    const handleLogout = async () => {
-        try {
-            const data = await authLogout()
-            if (data.success) {
-                toast.success(data.message)
-                dispatch(logout())
-                navigate("/login")
-            }
-        } catch (error) {
-            console.error(error)
-            toast.error(error.message || "something went wrong!")
-        }
-    }
-
-    useGSAP(() => {
-        if (!mainContainerRef.current) return
-
-        const ctx = gsap.context(() => {
-
-            const q = gsap.utils.selector(mainContainerRef.current)
-
-            const animateIfExists = (selector, animation) => {
-                const el = q(selector)
-                if (el.length) {
-                    gsap.from(el, animation)
+        // Fetch first anime from database
+        getAnimeList(1)
+            .then((res) => {
+                if (res && res.data && res.data.data && res.data.data.length > 0) {
+                    const anime = res.data.data[0];
+                    setFeaturedAnime({
+                        _id: anime._id,
+                        year: anime.releaseYear || "N/A",
+                        genre: anime.genre || "N/A",
+                        isSeries: anime.isSeries,
+                        title: anime.title,
+                        description: anime.description || "",
+                        tags: anime.tags || [],
+                        trailer: parseYoutubeId(anime.trailer) || "x7uLutVRBfI",
+                        poster: anime.poster || posterFallback,
+                    });
                 }
+            })
+            .catch((err) => {
+                console.error("Failed to load featured anime:", err);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (!data._id || data._id === "your_name_fallback") return;
+
+        // Check if featured anime is in watchlist
+        getWatchlist(50)
+            .then((res) => {
+                if (res && res.data && res.data.items) {
+                    const found = res.data.items.some((item) => item.anime?._id === data._id);
+                    setInWatchlist(found);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to check watchlist status:", err);
+            });
+    }, [data._id]);
+
+    const parseYoutubeId = (url) => {
+        if (!url) return "";
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return match && match[2].length === 12 ? match[2] : match && match[2].length === 11 ? match[2] : url;
+    };
+
+    const handleWatchlistToggle = async () => {
+        if (data._id === "your_name_fallback") {
+            toast.error("Sign in or add anime to database to save watchlists!");
+            return;
+        }
+
+        try {
+            if (inWatchlist) {
+                await removeFromWatchlist(data._id);
+                setInWatchlist(false);
+                toast.success("Removed from watchlist!");
+            } else {
+                await addToWatchlist(data._id);
+                setInWatchlist(true);
+                toast.success("Added to watchlist!");
+            }
+        } catch (err) {
+            toast.error(err.message || "Failed to update watchlist.");
+        }
+    };
+
+    const handleReviewSubmit = async (e) => {
+        if (e.key === "Enter" || e.type === "click") {
+            if (!reviewContent.trim()) return;
+            if (data._id === "your_name_fallback") {
+                toast.error("Cannot review default fallback banner anime.");
+                return;
             }
 
-            // Base
-            gsap.from(mainContainerRef.current, {
-                opacity: 0,
-                duration: 0.5
-            })
-
-            // Desktop
-            animateIfExists(".nav-item", { y: -50, opacity: 0, stagger: 0.1 })
-            animateIfExists(".hero-title", { x: -100, opacity: 0 })
-            animateIfExists(".hero-desc", { y: 50, opacity: 0 })
-            animateIfExists(".tag-item", { y: 20, opacity: 0, stagger: 0.1 })
-            animateIfExists(".card", { scale: 0.8, opacity: 0, stagger: 0.2 })
-
-            // Mobile
-            animateIfExists(".mobile-hero-img", { scale: 1.2, opacity: 0 })
-            animateIfExists(".mobile-year", { x: -30, opacity: 0 })
-            animateIfExists(".mobile-genre", { x: -30, opacity: 0 })
-            animateIfExists(".mobile-tag", { y: 20, opacity: 0 })
-            animateIfExists(".mobile-title", { y: 30, opacity: 0 })
-            animateIfExists(".mobile-desc", { y: 30, opacity: 0 })
-            animateIfExists(".mobile-controls", { y: 50, opacity: 0 })
-
-        }, mainContainerRef)
-
-        return () => ctx.revert()
-    }, [])
-
-    useEffect(() => {
-        if (!movies.length) return
-
-        const track = document.querySelector(".movie-track")
-        if (!track) return
-
-        const distance = track.scrollHeight
-
-        tweenRef.current = gsap.to(track, {
-            y: -distance / 2,
-            duration: 22,
-            ease: "none",
-            repeat: -1,
-            yoyo: true
-        })
-
-        return () => {
-            tweenRef.current?.kill()
+            setReviewLoading(true);
+            try {
+                await createReview(data._id, reviewContent.trim());
+                toast.success("Review posted successfully!");
+                setReviewContent("");
+            } catch (err) {
+                toast.error(err.message || "Failed to submit review.");
+            } finally {
+                setReviewLoading(false);
+            }
         }
-    }, [movies])
-
-    const handleEnter = () => tweenRef.current?.pause()
-    const handleLeave = () => tweenRef.current?.resume()
-
-    useEffect(() => {
-        const container = mainContainerRef.current
-        if (!container) return
-
-
-
-        container.addEventListener("mouseenter", handleEnter)
-        container.addEventListener("mouseleave", handleLeave)
-
-        return () => {
-            container.removeEventListener("mouseenter", handleEnter)
-            container.removeEventListener("mouseleave", handleLeave)
-        }
-    }, [])
-
-
-    if (loading) return <Loader />
-    if (!movies.length) return <div className=" bg-primary w-screen h-screen flex justify-center items-center flex-col">
-        <p className='text-accent text-xl font-bold font-outfit tracking-wider'>No movies found</p>
-        <Link to="/profile" className='text-md font-medium tracking-widest font-poppins text-accent underline'>Profile</Link>
-    </div>
+    };
 
     return (
-        <div ref={mainContainerRef} className='w-screen h-screen overflow-hidden relative'>
-
-            <img src={overlayBg} alt="overlay" className='absolute bottom-0 left-0 hidden lg:flex xl:flex z-1' />
-
-            {/* Large screens */}
-            <div className='hidden sm:hidden md:hidden lg:grid xl:grid grid-cols-16 w-full h-full bg-cover bg-center bg-no-repeat' style={{ backgroundImage: `url(${currentMovie?.poster?.master})` }}>
-                <div className='col-span-1'></div>
-                <div className='col-span-5 grid lg:grid-rows-8 xl:grid-rows-12 z-10'>
-                    <div className='lg:row-span-1 xl:row-span-1 flex justify-start items-center'>
-                        <img src={largeLogo} alt="logo" className='object-cover max-w-60' />
-                    </div>
-                    <div className='lg:row-span-1 xl:row-span-2'></div>
-                    <div className='row-span-1 grid grid-cols-4'>
-                        <p className='year font-bold font-outfit text-4xl text-white tracking-wide col-span-1 text-start content-center'>{currentMovie?.releaseYear}</p>
-                        <p className='genre font-medium font-outfit text-xl text-white tracking-wider col-span-2 xl:text-start lg:text-center  content-center'>{currentMovie?.genre}</p>
-                    </div>
-                    <div className='row-span-1 flex justify-start items-start'>
-                        <h1 className='hero-title uppercase text-4xl font-outfit font-extrabold text-white tracking-tighter shrink max-w-sm'>{currentMovie?.title}</h1>
-                    </div>
-                    <div className='lg:row-span-2 xl:row-span-4 flex justify-start items-start pt-6'>
-                        <p className='hero-desc text-white font-poppins text-sm tracking-widest font-medium lg:max-w-80 xl:max-w-md'>{currentMovie?.description}</p>
-                    </div>
-                    <div className='row-span-1'></div>
-                    <div className='lg:row-span-1 xl:row-span-2 flex justify-start items-start gap-2 flex-wrap'>
-                        {currentMovie?.tags?.map((value, index) => (
-                            <p key={index} className='tag-item font-poppins text-white lg:text-sm xl:text-md uppercase font-bold tracking-widest'>{value}</p>
-                        ))}
-                    </div>
-                </div>
-                <div className='col-span-5 grid lg:grid-rows-8 xl:grid-rows-8 w-full h-full z-10'>
-                    <div className='row-span-1 grid grid-cols-4' >
-                        {["Home", "About", "Submission", "Lists"].map((value, index) => (
-                            <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-center content-center lg:text-sm xl:text-xl font-outfit font-bold tracking-wider uppercase text-white cursor-pointer hover:underline'>{value}</Link>
-                        ))}
-                    </div>
-                    <div className='lg:row-span-6 xl:row-span-4'>
-
-                    </div>
-                    <div className='row-span-3 grid grid-cols-2 pt-12'>
-                        {
-                            authStatus ? ["Profile", "Logout"].map((value, index) => {
-                                if (value === "Profile") {
-                                    return (
-                                        <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center'>{value}</Link>
-                                    )
-                                } else {
-                                    return (
-                                        <button onClick={handleLogout} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center'>{value}</button>
-                                    )
-                                }
-                            }) : ["Login", "Register"].map((value, index) => (
-                                <Link to={`/${value.toLowerCase()}`} key={index} className='nav-item col-span-1 text-white font-medium font-poppins text-2xl cursor-pointer hover:underline uppercase tracking-wider text-center content-center '>{value}</Link>
-                            ))
-                        }
-                    </div>
-                </div>
-                <div className='col-span-4 h-full overflow-hidden'>
-                    <div onMouseEnter={handleEnter} onMouseLeave={handleLeave} ref={scrollRef} className='movie-scroll inset-0 backdrop-blur-md bg-white/1 w-full h-full flex flex-col lg:justify-center xl:justify-start items-center p-6 gap-8'>
-                        <div className='movie-track flex flex-col gap-8'>
-                            {
-                                movies.map((movie, index) => (
-                                    <div onClick={() => setCurrentIndex(index)} key={movie._id} className='card border-2 border-white lg:w-60 xl:w-80 shadow-[8px_12px_0px_0px_#ffffff] cursor-pointer relative'>
-                                        <img src={movie.poster.large} className='object-cover w-full h-full' alt={movie.title} />
-                                        <p className='absolute top-0 right-2 font-bold uppercase text-white'>{movie.title}</p>
-                                    </div>
-                                ))
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div className='col-span-1'></div>
+        <div className="relative w-screen h-screen overflow-hidden text-white bg-black">
+            {/* Background Video */}
+            <div className="absolute inset-0 w-full h-full overflow-hidden">
+                <iframe
+                    className="absolute top-1/2 left-1/2 w-[125%] h-[125%] -translate-x-1/2 -translate-y-1/2 object-cover pointer-events-none opacity-60 scale-110"
+                    src={`https://www.youtube.com/embed/${data.trailer}?autoplay=1&mute=1&loop=1&controls=0&playlist=${data.trailer}&showinfo=0&rel=0`}
+                    title="Background trailer"
+                    allow="autoplay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/70" />
             </div>
 
+            {/* MOBILE LAYOUT */}
+            <div className="md:hidden relative z-10 flex flex-col h-full justify-between pb-6 pt-4">
+                {/* Mobile Header */}
+                <div className="flex justify-between items-center px-6">
+                    <img src={smallerlogo} alt="Logo" className="w-24 object-contain" />
+                    <ToggleMenu iconClass="text-white hover:text-[#F5C23E]" />
+                </div>
 
-            {/* for smaller screens */}
-            <div className="w-full h-full grid grid-rows-12 bg-primary lg:hidden relative">
-                <Menu authStatus={authStatus} menuVisible={menuVisible} screenType={"smaller"} handleMenu={handleMenu} closeBtn={false} />
-                <div className='row-span-2 grid grid-rows-2'>
-                    <div className='grid grid-cols-2'>
-                        <div className='col-span-1 flex justify-center px-4 flex-col'>
-                            <h2 className='mobile-year text-2xl font-extrabold font-outfit text-accent tracking-wide'>{currentMovie?.releaseYear || "N/A"}</h2>
-                            <p className='mobile-genre text-md font-bold font-outfit tracking-widest text-accent'>{currentMovie?.genre || "Unknown"}</p>
+                {/* Floating poster like design */}
+                <div className="absolute top-20 left-6 z-20">
+                    <div 
+                        onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                        className="cursor-pointer group relative rounded-xl border-2 border-white/20 overflow-hidden shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                    >
+                        <img
+                            src={data.poster}
+                            alt={data.title}
+                            className="w-32 h-44 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="text-xs font-bold font-outfit uppercase bg-white/20 backdrop-blur-md px-2 py-1 rounded">View</span>
                         </div>
-                        <div className='col-span-1 uppercase font-outfit font-bold flex justify-end items-center pr-10'>
-                            <img src={smallLogo} alt='logo' />
+                    </div>
+                </div>
+
+                {/* Bottom Panel */}
+                <div className="w-full px-4 mt-auto">
+                    <div className="rounded-2xl backdrop-blur-xl bg-black/50 border border-white/20 p-5 pt-8 space-y-3 relative shadow-2xl">
+                        {/* Meta Info */}
+                        <div className="flex items-center gap-3 text-xs">
+                            <span className="font-bold text-[#FFD059]">{data.year}</span>
+                            <span className="text-white/80">{data.genre}</span>
+                            <span className="bg-[#FFD059] text-[#4E361E] px-2 py-[2px] rounded text-[10px] font-bold uppercase">
+                                {data.isSeries ? "Series" : "Movie"}
+                            </span>
+
+                            <div className="ml-auto flex gap-2">
+                                <button
+                                    onClick={handleWatchlistToggle}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-full border border-white/20 transition-all ${
+                                        inWatchlist ? "bg-[#FFD059] text-[#4E361E] border-[#FFD059]" : "bg-white/10 text-white hover:bg-white/20"
+                                    } cursor-pointer`}
+                                    aria-label="Add to watchlist"
+                                >
+                                    <Star size={16} fill={inWatchlist ? "currentColor" : "none"} />
+                                </button>
+                                <button
+                                    onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 cursor-pointer"
+                                    aria-label="View reviews"
+                                >
+                                    <MessageSquare size={16} />
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Title Display */}
+                        <h2 
+                            onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                            className="text-2xl font-extrabold font-outfit uppercase tracking-wide text-white cursor-pointer hover:text-[#FFD059] transition-colors"
+                        >
+                            {data.title}
+                        </h2>
+
+                        {/* Description */}
+                        <p className="text-xs text-white/80 leading-snug line-clamp-3">
+                            {data.description}
+                        </p>
+
+                        {/* Review Input */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="review"
+                                value={reviewContent}
+                                onChange={(e) => setReviewContent(e.target.value)}
+                                onKeyDown={handleReviewSubmit}
+                                placeholder="Write your review and press enter..."
+                                disabled={reviewLoading}
+                                className="w-full bg-white/10 text-white border border-white/20 h-10 px-3 pr-10 text-xs rounded-lg outline-none focus:border-[#FFD059] focus:bg-white/20 transition-all"
+                            />
+                            {reviewContent.trim() && (
+                                <button
+                                    onClick={handleReviewSubmit}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-[#FFD059]"
+                                >
+                                    Post
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Tags */}
+                        {data.tags && data.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                                {data.tags.map((tag, idx) => (
+                                    <span key={idx} className="bg-white/10 text-white/70 px-2 py-0.5 rounded-full text-[9px] font-medium">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div className='flex justify-start items-center pl-4'>
-                        <p className='mobile-tag font-bold text-accent font-outfit tracking-wide text-md'>{currentMovie?.tags.join(", ")}</p>
+                </div>
+            </div>
+
+            {/* DESKTOP LAYOUT */}
+            <div className="hidden md:flex flex-col justify-between h-full relative z-10 px-12 py-8">
+                {/* Desktop Top Bar */}
+                <div className="flex justify-between items-center">
+                    <img 
+                        src={largerlogo} 
+                        alt="AniScope" 
+                        onClick={() => navigate("/home")} 
+                        className="w-32 object-contain cursor-pointer transition-transform hover:scale-105" 
+                    />
+
+                    {/* Filter categories linking to explore page */}
+                    <div className="flex items-center gap-8 text-sm font-bold tracking-[0.2em] text-white/70">
+                        {["ADVENTURE", "ACTION", "SWORDSMAN", "COURAGE"].map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => navigate(`/explore?search=${cat.toLowerCase()}`)}
+                                className="hover:text-[#FFD059] transition-colors cursor-pointer relative group py-1"
+                            >
+                                {cat}
+                                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFD059] transition-all group-hover:w-full"></span>
+                            </button>
+                        ))}
                     </div>
-                </div>
-                <div className='row-span-6'>
-                    <img src={currentMovie?.poster?.large} alt="movie poster" className='mobile-hero-img w-full h-full object-cover border-t-6 border-b-6 border-accent' />
-                </div>
-                <div className='row-span-1 flex justify-start items-center pl-4'>
-                    <h1 className='mobile-title font-bold uppercase text-2xl font-outfit tracking-wide text-accent'>{currentMovie?.title || "Unknown"}</h1>
-                </div>
-                <div className='row-span-2 flex justify-start items-start pl-4'>
-                    <p className='mobile-desc text-accent tracking-wider font-medium sm:max-w-100 md:max-w-200 font-poppins'>
-                        {currentMovie?.description || "No description"}
-                    </p>
-                </div>
-                <div className='mobile-controls row-span-1 grid grid-cols-3 z-10'>
-                    <div className='bg-bg'>
-                        <button onClick={handlePrev} className='w-full h-full flex justify-center items-center'>
-                            <ChevronLeft className='text-accent text-2xl font-bold h-12 w-12' />
+
+                    {/* Right Icons Stack */}
+                    <div className="flex flex-col gap-4 items-center">
+                        <div className="w-12 h-12 rounded-full border-2 border-white/20 bg-black/30 hover:border-[#FFD059] flex items-center justify-center transition-all">
+                            <ToggleMenu iconClass="text-white hover:text-[#FFD059]" />
+                        </div>
+                        <button
+                            onClick={handleWatchlistToggle}
+                            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                inWatchlist 
+                                    ? "bg-[#FFD059] border-[#FFD059] text-[#4E361E]" 
+                                    : "bg-black/30 border-white/20 hover:border-[#FFD059]"
+                            }`}
+                            title="Add to Watchlist"
+                        >
+                            <Star size={18} fill={inWatchlist ? "currentColor" : "none"} />
+                        </button>
+                        <button
+                            onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                            className="w-12 h-12 rounded-full border-2 border-white/20 bg-black/30 hover:border-[#FFD059] flex items-center justify-center transition-all cursor-pointer"
+                            title="Reviews & Ratings"
+                        >
+                            <MessageSquare size={18} />
                         </button>
                     </div>
-                    <div className='bg-menu'>
-                        <button onClick={handleMenu} className='w-full h-full flex justify-center items-center'>
-                            {
-                                menuVisible ? <X className='text-accent text-2xl font-bold h-12 w-12' /> : <MenuIcon className='text-accent text-2xl font-bold h-12 w-12' />
-                            }
-                        </button>
+                </div>
+
+                {/* Main Featured Content Block */}
+                <div className="flex items-end justify-between mb-8">
+                    {/* Left Details Panel */}
+                    <div className="max-w-xl space-y-6">
+                        <div className="flex items-center gap-4 text-sm font-bold">
+                            <span className="text-[#FFD059]">{data.year}</span>
+                            <span className="text-white/60">|</span>
+                            <span>{data.genre}</span>
+                            <span className="text-white/60">|</span>
+                            <span className="bg-[#FFD059] text-[#4E361E] px-3 py-0.5 rounded text-xs font-extrabold uppercase tracking-wide">
+                                {data.isSeries ? "Series" : "Movie"}
+                            </span>
+                        </div>
+
+                        <h1 
+                            onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                            className="text-7xl font-extrabold tracking-wider leading-tight uppercase font-outfit select-none cursor-pointer hover:text-[#FFD059] transition-all duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                        >
+                            {data.title}
+                        </h1>
+
+                        <p className="text-white/80 leading-relaxed text-sm max-w-lg font-poppins drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] line-clamp-4">
+                            {data.description}
+                        </p>
+
+                        {/* Tags */}
+                        {data.tags && data.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {data.tags.map((tag, idx) => (
+                                    <span 
+                                        key={idx} 
+                                        onClick={() => navigate(`/explore?search=${tag.toLowerCase()}`)}
+                                        className="bg-white/10 hover:bg-[#FFD059] hover:text-[#4E361E] text-white/85 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all border border-white/10"
+                                    >
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div className='bg-btn'>
-                        <button onClick={handleNext} className='w-full h-full flex justify-center items-center'>
-                            <ChevronRight className='text-accent h-12 w-12' />
-                        </button>
+
+                    {/* Right Poster Showcase Card */}
+                    <div 
+                        onClick={() => data._id !== "your_name_fallback" && navigate(`/anime/${data._id}`)}
+                        className="w-56 h-80 rounded-2xl overflow-hidden border-4 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] cursor-pointer group relative transition-all duration-500 hover:scale-105 hover:border-[#FFD059]"
+                    >
+                        <img 
+                            src={data.poster} 
+                            alt={data.title} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 flex flex-col justify-end p-4 transition-opacity duration-300">
+                            <span className="text-[#FFD059] font-outfit uppercase font-bold text-sm">View Details</span>
+                            <span className="text-white/70 text-xs font-poppins">Reviews & Ratings</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-    )
+    );
 }
-
-export default Home

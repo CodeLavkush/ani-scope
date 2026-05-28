@@ -2,60 +2,65 @@ import { ApiResponse } from "../utils/api-response.js"
 import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import { Anime } from "../models/anime.models.js"
-import mongoose from "mongoose"
 import { Review } from "../models/review.models.js"
+import mongoose from "mongoose"
 
 const createReview = asyncHandler(async (req, res) => {
     const { animeId } = req.params
     const { content } = req.body
+    const userId = req.user._id
+
+    if (!content?.trim()) {
+        throw new ApiError(400, "Content is required")
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(animeId)) {
+        throw new ApiError(400, "Invalid anime ID")
+    }
 
     const anime = await Anime.findById(animeId)
+    if (!anime) throw new ApiError(404, "Anime not found")
 
-    if (!anime) {
-        throw new ApiError(404, "Anime not found")
-    }
+    try {
+        const review = await Review.create({
+            content,
+            anime: animeId,
+            user: userId,
+        })
 
-    const review = await Review.create({
-        content,
-        anime: new mongoose.Types.ObjectId(animeId),
-        user: new mongoose.Types.ObjectId(req.user._id),
-    })
-
-    if (!review) {
-        throw new ApiError(404, "Review not found")
-    }
-
-    return res
-        .status(201)
-        .json(
-            new ApiResponse(
-                201,
-                review,
-                "Review created successfully",
-            )
+        return res.status(201).json(
+            new ApiResponse(201, review, "Review created")
         )
+    } catch (error) {
+        if (error.code === 11000) {
+            throw new ApiError(409, "You already reviewed this anime")
+        }
+        throw error
+    }
 })
 
 const getReviews = asyncHandler(async (req, res) => {
     const { animeId } = req.params
+    const { limit = 10, cursor } = req.query
 
-    const anime = await Anime.findById(animeId)
+    if (!mongoose.Types.ObjectId.isValid(animeId)) {
+        throw new ApiError(400, "Invalid anime ID")
+    }
 
-    if (!anime) {
-        throw new ApiError(404, "Anime not found")
+    const parsedLimit = Math.min(Number(limit) || 10, 50)
+
+    const matchStage = {
+        anime: new mongoose.Types.ObjectId(animeId),
+    }
+
+    if (cursor && mongoose.Types.ObjectId.isValid(cursor)) {
+        matchStage._id = { $lt: new mongoose.Types.ObjectId(cursor) }
     }
 
     const reviews = await Review.aggregate([
-        {
-            $match: {
-                anime: new mongoose.Types.ObjectId(animeId),
-            },
-        },
-        {
-            $sort: {
-                createdAt: -1,
-            },
-        },
+        { $match: matchStage },
+        { $sort: { _id: -1 } },
+        { $limit: parsedLimit },
         {
             $lookup: {
                 from: "users",
@@ -64,16 +69,12 @@ const getReviews = asyncHandler(async (req, res) => {
                 as: "user",
             },
         },
-        {
-            $unwind: "$user",
-        },
-
+        { $unwind: "$user" },
         {
             $project: {
                 _id: 1,
-                createdAt: 1,
                 content: 1,
-
+                createdAt: 1,
                 user: {
                     _id: "$user._id",
                     username: "$user.username",
@@ -82,73 +83,59 @@ const getReviews = asyncHandler(async (req, res) => {
         },
     ])
 
-    if (reviews.length === 0) {
-        throw new ApiError(404, "Reviews not found")
-    }
+    const nextCursor =
+        reviews.length > 0
+            ? reviews[reviews.length - 1]._id
+            : null
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                reviews,
-                "Reviews fetched successfully"
-            )
-        )
+    return res.status(200).json(
+        new ApiResponse(200, {
+            items: reviews,
+            nextCursor,
+        }, "Reviews fetched")
+    )
 })
 
 const updateReview = asyncHandler(async (req, res) => {
     const { id } = req.params
     const { content } = req.body
+    const userId = req.user._id
 
-    const updatedReview = await Review.findByIdAndUpdate(
-        id,
-        {
-            content,
-        },
-        {
-            returnDocument: "after",
-        }
-    )
-
-    if (!updatedReview) {
-        throw new ApiError(404, "Review not found")
+    if (!content?.trim()) {
+        throw new ApiError(400, "Content required")
     }
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                updatedReview,
-                "Review updated successfully"
-            )
-        )
+    const review = await Review.findOneAndUpdate(
+        { _id: id, user: userId },
+        { content },
+        { new: true }
+    )
+
+    if (!review) {
+        throw new ApiError(404, "Not found or unauthorized")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, review, "Updated")
+    )
 })
 
 const deleteReview = asyncHandler(async (req, res) => {
     const { id } = req.params
+    const userId = req.user._id
 
-    const deletedReview = await Review.findByIdAndDelete(id)
+    const review = await Review.findOneAndDelete({
+        _id: id,
+        user: userId,
+    })
 
-    if (!deletedReview) {
-        throw new ApiError(404, "Review not found")
+    if (!review) {
+        throw new ApiError(404, "Not found or unauthorized")
     }
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                deletedReview,
-                "Review deleted successfully"
-            )
-        )
+    return res.status(200).json(
+        new ApiResponse(200, review, "Deleted")
+    )
 })
 
-export {
-    createReview,
-    getReviews,
-    updateReview,
-    deleteReview,
-}
+export { createReview, getReviews, updateReview, deleteReview }

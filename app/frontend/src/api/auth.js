@@ -1,10 +1,26 @@
 import { apiRequest } from "../utils/apiRequest";
 
+const authURL = `/api/v1/auth`;
 
-const authURL = `/api/v1/auth`
+export const register = async (userFormData) => {
+    try {
+        const response = await fetch(`${authURL}/register`, {
+            method: "POST",
+            body: userFormData,
+        });
 
-export const register = (user) =>
-    apiRequest(`${authURL}/register`, "POST", user);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data?.message || `Request failed: ${response.status}`);
+        }
+
+        return data;
+    } catch (error) {
+        console.error("API Error:", error.message);
+        throw error;
+    }
+};
 
 export const login = (user) =>
     apiRequest(`${authURL}/login`, "POST", user);
@@ -23,3 +39,27 @@ export const logout = () =>
 
 export const resendVerificationEmail = () =>
     apiRequest(`${authURL}/resend-email-verification`, "POST", null, true);
+
+export const updateUserProfile = async (profileFormData) => {
+    try {
+        const response = await fetch(`${authURL}`, {
+            method: "PATCH",
+            credentials: "include",
+            body: profileFormData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data?.message || `Request failed: ${response.status}`);
+        }
+
+        return data;
+    } catch (error) {
+        console.error("API Error:", error.message);
+        throw error;
+    }
+};
+
+export const deleteUserProfile = () =>
+    apiRequest(`${authURL}`, "DELETE", null, true);

@@ -1,19 +1,19 @@
-import About from "./About";
 import Home from "./Home";
-import Lists from "./Lists";
 import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile";
 import OTP from "./OTP";
-import Submission from "./Submission";
+import Explore from "./Explore";
+import Watchlist from "./Watchlist";
+import Anime from "./Anime";
 
 export {
-    About,
     Home,
-    Lists,
     Login,
     Register,
     Profile,
     OTP,
-    Submission,
+    Explore,
+    Watchlist,
+    Anime,
 }

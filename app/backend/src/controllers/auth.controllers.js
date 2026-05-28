@@ -63,6 +63,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
     await user.save({ validateBeforeSave: false })
 
+    console.log(`[DEV] Registration OTP for ${user.username} (${user.email}): ${otp}`);
+
     await sendEmail(
         {
             email: user?.email,
@@ -243,6 +245,8 @@ const resendEmailVerification = asyncHandler(async (req, res) => {
     user.otpExpiry = otpExpiry
 
     await user.save({ validateBeforeSave: false })
+
+    console.log(`[DEV] Resend OTP for ${user.username} (${user.email}): ${otp}`);
 
     await sendEmail(
         {

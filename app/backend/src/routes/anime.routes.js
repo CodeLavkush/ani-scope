@@ -20,18 +20,16 @@ const router = Router()
 
 router.use(verifyJWT)
 
-router.use(authorizeRoles(USER_ROLES.ADMIN))
-
 router
     .route("/")
-    .post(upload.single("poster"), animeValidator(), validate, createAnime)
+    .post(authorizeRoles(USER_ROLES.ADMIN), upload.single("poster"), animeValidator(), validate, createAnime)
     .get(getAnime)
 
 router
     .route("/:animeId")
     .get(getAnimeById)
-    .patch(animeValidator(), validate, updateAnimeById)
-    .delete(deleteAnimeById)
+    .patch(authorizeRoles(USER_ROLES.ADMIN), animeValidator(), validate, updateAnimeById)
+    .delete(authorizeRoles(USER_ROLES.ADMIN), deleteAnimeById)
 
 
 export default router

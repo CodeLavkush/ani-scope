@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
     addAnime,
-    getAnime,
+    getWatchlist,
     removeAnime,
 } from "../controllers/watchlist.controllers.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -13,7 +13,7 @@ router.use(verifyJWT)
 
 router
     .route("/")
-    .get(getAnime)
+    .get(getWatchlist)
 
 router
     .route("/:animeId")
