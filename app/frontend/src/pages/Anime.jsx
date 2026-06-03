@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { getAnimeById, updateAnime, deleteAnime } from "../api/anime";
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from "../api/watchlist";
 import { getReviews, createReview, deleteReview } from "../api/review";
-import { getRatingsStats, createRating } from "../api/rating";
+import { getRatingsStats, getMyRating, createRating, updateRating } from "../api/rating";
 import { ToggleMenu, Input, Button } from "../components";
 import logoSmaller from "../assets/logo-smaller.png";
 import posterFallback from "../assets/dummy/poster.jpg";
@@ -31,7 +31,7 @@ export default function Anime() {
 
     // Ratings
     const [ratingsStats, setRatingsStats] = useState({ avgRating: 0, totalRatings: 0 });
-    const [selectedRate, setSelectedRate] = useState(null);
+    const [myRating, setMyRating] = useState(null); // { _id, rate } | null
     const [submittingRate, setSubmittingRate] = useState(false);
 
     // Admin Edit Modal
@@ -83,10 +83,16 @@ export default function Anime() {
                 setInWatchlist(found);
             }
 
-            // 3. Fetch ratings stats
-            const ratingRes = await getRatingsStats(animeId);
+            // 3. Fetch ratings stats + user's own rating
+            const [ratingRes, myRatingRes] = await Promise.all([
+                getRatingsStats(animeId),
+                getMyRating(animeId).catch(() => null),
+            ]);
             if (ratingRes && ratingRes.data) {
                 setRatingsStats(ratingRes.data);
+            }
+            if (myRatingRes && myRatingRes.data) {
+                setMyRating(myRatingRes.data);
             }
 
             // 4. Fetch reviews list
@@ -163,23 +169,30 @@ export default function Anime() {
 
     // Rating Actions
     const handleRateSubmit = async (rate) => {
+        if (submittingRate) return;
+        // Don't re-submit same rating
+        if (myRating && myRating.rate === rate) return;
+
         setSubmittingRate(true);
-        setSelectedRate(rate);
         try {
-            await createRating(animeId, rate);
-            toast.success(`You rated this anime ${rate}/10!`);
-            // Refresh stats
+            if (myRating) {
+                // Update existing rating
+                await updateRating(myRating._id, rate);
+                setMyRating((prev) => ({ ...prev, rate }));
+                toast.success(`Rating updated to ${rate}/10!`);
+            } else {
+                // Create new rating
+                const res = await createRating(animeId, rate);
+                if (res && res.data) setMyRating(res.data);
+                toast.success(`You rated this anime ${rate}/10!`);
+            }
+            // Refresh average stats
             const ratingRes = await getRatingsStats(animeId);
             if (ratingRes && ratingRes.data) {
                 setRatingsStats(ratingRes.data);
             }
         } catch (err) {
-            // Rating create throws 409 if already rated
-            if (err.message?.includes("rated") || err.message?.includes("409")) {
-                toast.error("You have already rated this anime!");
-            } else {
-                toast.error(err.message || "Failed to submit rating.");
-            }
+            toast.error(err.message || "Failed to submit rating.");
         } finally {
             setSubmittingRate(false);
         }
@@ -401,42 +414,83 @@ export default function Anime() {
                     </div>
 
                     {/* Ratings Scoreboard */}
-                    <div className="bg-white border-4 border-[#4E361E] rounded-xl p-6 shadow-[6px_6px_0px_0px_#4E361E] flex flex-col justify-between">
-                        <div>
-                            <h3 className="font-extrabold font-outfit uppercase text-lg mb-4 border-b-2 border-[#4E361E]/10 pb-2">
-                                Ratings
-                            </h3>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-16 h-16 bg-[#FFD059] border-4 border-[#4E361E] rounded-lg shadow-[3px_3px_0px_0px_#4E361E] flex flex-col items-center justify-center select-none font-outfit">
-                                    <span className="text-xl font-black leading-none">{ratingsStats.avgRating ? Number(ratingsStats.avgRating).toFixed(1) : "0"}</span>
-                                    <span className="text-[9px] font-bold">/ 10</span>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-sm">Average Score</p>
-                                    <p className="text-xs text-[#4E361E]/70 font-poppins">{ratingsStats.totalRatings || 0} user ratings</p>
-                                </div>
-                            </div>
+                    <div className="bg-white border-4 border-[#4E361E] rounded-xl p-6 shadow-[6px_6px_0px_0px_#4E361E] flex flex-col gap-5">
+                        {/* Header */}
+                        <h3 className="font-extrabold font-outfit uppercase text-lg border-b-2 border-[#4E361E]/10 pb-2">
+                            Ratings
+                        </h3>
 
-                            {/* Give rating options 1..10 */}
-                            <div className="space-y-3">
-                                <span className="font-bold font-outfit uppercase text-xs">Rate This Anime</span>
-                                <div className="grid grid-cols-5 gap-1.5">
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rate) => (
-                                        <button
-                                            key={rate}
-                                            onClick={() => handleRateSubmit(rate)}
-                                            disabled={submittingRate}
-                                            className="w-full aspect-square border-2 border-[#4E361E] rounded-md font-extrabold text-xs flex items-center justify-center transition-all bg-[#FFEBB8]/10 hover:bg-[#FFD059] active:bg-[#F5C23E] cursor-pointer"
-                                        >
-                                            {rate}
-                                        </button>
-                                    ))}
+                        {/* Average score block */}
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-[#FFD059] border-4 border-[#4E361E] rounded-lg shadow-[3px_3px_0px_0px_#4E361E] flex flex-col items-center justify-center select-none font-outfit shrink-0">
+                                <span className="text-xl font-black leading-none">
+                                    {ratingsStats.avgRating ? Number(ratingsStats.avgRating).toFixed(1) : "—"}
+                                </span>
+                                <span className="text-[9px] font-bold">/ 10</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm">Average Score</p>
+                                <p className="text-xs text-[#4E361E]/60 font-poppins mb-1.5">
+                                    {ratingsStats.totalRatings || 0} {ratingsStats.totalRatings === 1 ? "rating" : "ratings"}
+                                </p>
+                                {/* Average fill bar */}
+                                <div className="w-full h-2.5 bg-[#FFEBB8] border-2 border-[#4E361E] rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-[#FFD059] rounded-full transition-all duration-700"
+                                        style={{ width: `${((ratingsStats.avgRating || 0) / 10) * 100}%` }}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="text-[10px] text-gray-500 font-poppins mt-4 text-center">
-                            Note: Ratings are final per account.
+                        {/* Your rating badge */}
+                        {myRating ? (
+                            <div className="flex items-center gap-2 bg-[#FFD059]/30 border-2 border-[#FFD059] rounded-lg px-3 py-2">
+                                <Star size={14} className="text-[#4E361E]" fill="currentColor" />
+                                <span className="text-xs font-extrabold font-outfit uppercase text-[#4E361E]">
+                                    Your Rating: {myRating.rate}/10
+                                </span>
+                                <span className="ml-auto text-[10px] text-[#4E361E]/60 font-poppins">Tap to change</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 bg-[#FFEBB8]/40 border-2 border-dashed border-[#4E361E]/30 rounded-lg px-3 py-2">
+                                <Star size={14} className="text-[#4E361E]/40" />
+                                <span className="text-xs font-bold font-outfit uppercase text-[#4E361E]/50">
+                                    Not rated yet
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Rating buttons 1–10 */}
+                        <div className="space-y-2">
+                            <span className="font-bold font-outfit uppercase text-xs text-[#4E361E]/70">
+                                {myRating ? "Change Your Rating" : "Rate This Anime"}
+                            </span>
+                            <div className="grid grid-cols-5 gap-1.5">
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rate) => {
+                                    const isSelected = myRating?.rate === rate;
+                                    const isLoading = submittingRate;
+                                    return (
+                                        <button
+                                            key={rate}
+                                            onClick={() => handleRateSubmit(rate)}
+                                            disabled={isLoading}
+                                            title={isSelected ? `Your current rating: ${rate}` : `Rate ${rate}/10`}
+                                            className={`w-full aspect-square border-2 rounded-md font-extrabold text-xs flex items-center justify-center transition-all ${
+                                                isSelected
+                                                    ? "bg-[#FFD059] border-[#4E361E] shadow-[2px_2px_0px_0px_#4E361E] scale-110 text-[#4E361E]"
+                                                    : "border-[#4E361E] bg-[#FFEBB8]/10 hover:bg-[#FFD059]/60 active:bg-[#F5C23E] cursor-pointer"
+                                            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                        >
+                                            {isSelected && !isLoading ? (
+                                                <Check size={12} />
+                                            ) : (
+                                                rate
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>

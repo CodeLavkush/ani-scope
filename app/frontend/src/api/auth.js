@@ -68,4 +68,4 @@ export const loginAdmin = (credentials) =>
     apiRequest(`${authURL}/create-admin`, "POST", credentials);
 
 export const getUserProfiles = () =>
-    apiRequest(`${authURL}`, "GET", null, true);
+    apiRequest(`${authURL}`, "GET", null, true);

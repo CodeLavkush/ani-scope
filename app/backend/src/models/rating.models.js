@@ -23,4 +23,7 @@ const ratingSchema = new Schema(
     }
 );
 
+// Enforce one rating per user per anime at the database level
+ratingSchema.index({ anime: 1, user: 1 }, { unique: true });
+
 export const Rating = mongoose.model("Rating", ratingSchema)

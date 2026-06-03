@@ -12,15 +12,10 @@ export default defineConfig(({ mode }) => {
     ],
 
     server: {
+      host: true,
       proxy: {
         '/api': {
-          target:
-            env.VITE_ENV === 'prod'
-              ? env.VITE_BACKEND_LINK
-              : 'http://localhost:4000',
-
-          changeOrigin: true,
-          secure: false,
+          target: env.VITE_BACKEND_LINK,
         },
       },
     },

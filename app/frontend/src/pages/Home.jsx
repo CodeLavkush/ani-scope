@@ -65,7 +65,7 @@ export default function Home() {
                     setWatchlistIds(new Set(res.data.items.map(item => item.anime?._id).filter(Boolean)));
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     // ─── Navigation ────────────────────────────────────────────────────────────
@@ -236,13 +236,12 @@ export default function Home() {
                     <button
                         key={i}
                         onClick={() => { setCurrentIndex(i); setReviewContent(""); }}
-                        className={`rounded-full transition-all duration-300 cursor-pointer ${
-                            i === currentIndex
+                        className={`rounded-full transition-all duration-300 cursor-pointer ${i === currentIndex
                                 ? "w-1.5 h-7 bg-[#FFD059] shadow-[0_0_8px_#FFD059]"
                                 : i < currentIndex
                                     ? "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
                                     : "w-1.5 h-1.5 bg-white/20 hover:bg-white/50"
-                        }`}
+                            }`}
                         title={animeList[i]?.title}
                     />
                 ))}
@@ -252,7 +251,7 @@ export default function Home() {
             </div>
 
             {/* ── Up / Down nav arrows ── */}
-            <div className="absolute right-10 md:right-14 bottom-20 z-30 flex flex-col gap-2">
+            <div className="hidden md:flex absolute right-10 md:right-14 bottom-20 z-30 flex-col gap-2">
                 <button
                     onClick={goToPrev}
                     disabled={currentIndex === 0}
@@ -321,9 +320,8 @@ export default function Home() {
                             <div className="ml-auto flex gap-2">
                                 <button
                                     onClick={handleWatchlistToggle}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-full border border-white/20 transition-all cursor-pointer ${
-                                        inWatchlist ? "bg-[#FFD059] text-[#4E361E] border-[#FFD059]" : "bg-white/10 hover:bg-white/20"
-                                    }`}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-full border border-white/20 transition-all cursor-pointer ${inWatchlist ? "bg-[#FFD059] text-[#4E361E] border-[#FFD059]" : "bg-white/10 hover:bg-white/20"
+                                        }`}
                                     aria-label="Watchlist"
                                 >
                                     <Star size={15} fill={inWatchlist ? "currentColor" : "none"} />
@@ -415,9 +413,8 @@ export default function Home() {
                         </div>
                         <button
                             onClick={handleWatchlistToggle}
-                            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
-                                inWatchlist ? "bg-[#FFD059] border-[#FFD059] text-[#4E361E]" : "bg-black/30 border-white/20 hover:border-[#FFD059]"
-                            }`}
+                            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${inWatchlist ? "bg-[#FFD059] border-[#FFD059] text-[#4E361E]" : "bg-black/30 border-white/20 hover:border-[#FFD059]"
+                                }`}
                             title="Watchlist"
                         >
                             <Star size={18} fill={inWatchlist ? "currentColor" : "none"} />

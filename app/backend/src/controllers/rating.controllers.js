@@ -66,6 +66,21 @@ const getRatings = asyncHandler(async (req, res) => {
     )
 })
 
+const getMyRating = asyncHandler(async (req, res) => {
+    const { animeId } = req.params
+    const userId = req.user._id
+
+    if (!mongoose.Types.ObjectId.isValid(animeId)) {
+        throw new ApiError(400, "Invalid anime ID")
+    }
+
+    const rating = await Rating.findOne({ anime: animeId, user: userId })
+
+    return res.status(200).json(
+        new ApiResponse(200, rating || null, "My rating")
+    )
+})
+
 const updateRating = asyncHandler(async (req, res) => {
     const { id } = req.params
     const { rate } = req.body
@@ -108,4 +123,4 @@ const deleteRating = asyncHandler(async (req, res) => {
     )
 })
 
-export { createRating, getRatings, updateRating, deleteRating }
+export { createRating, getRatings, getMyRating, updateRating, deleteRating }
