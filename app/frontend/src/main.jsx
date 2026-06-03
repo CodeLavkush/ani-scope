@@ -14,6 +14,8 @@ import {
   Explore,
   Watchlist,
   Anime,
+  AdminLogin,
+  AdminDashboard,
 } from "./pages"
 import { Protected } from "./components"
 
@@ -83,6 +85,20 @@ const router = createBrowserRouter([
         path: "anime/:animeId", element: (
           <Protected authentication>
             <Anime />
+          </Protected>
+        )
+      },
+      {
+        path: "admin-login", element: (
+          <Protected authentication={false}>
+            <AdminLogin />
+          </Protected>
+        )
+      },
+      {
+        path: "admin/dashboard", element: (
+          <Protected authentication adminOnly>
+            <AdminDashboard />
           </Protected>
         )
       },

@@ -62,4 +62,10 @@ export const updateUserProfile = async (profileFormData) => {
 };
 
 export const deleteUserProfile = () =>
-    apiRequest(`${authURL}`, "DELETE", null, true);
+    apiRequest(`${authURL}`, "DELETE", null, true);
+
+export const loginAdmin = (credentials) =>
+    apiRequest(`${authURL}/create-admin`, "POST", credentials);
+
+export const getUserProfiles = () =>
+    apiRequest(`${authURL}`, "GET", null, true);

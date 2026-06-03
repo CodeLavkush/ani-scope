@@ -1,25 +1,40 @@
-export async function apiRequest(endpoint, method = "GET", body, withCredentials = false) {
+export const apiRequest = async (url, method = "GET", data = null, withAuth = false, isFormData = false) => {
     try {
-        const response = await fetch(`${endpoint}`, {
+        const options = {
             method,
-            headers: {
-                "content-type": "application/json",
-                accept: "application/json",
-            },
-            credentials: withCredentials ? "include" : "same-origin",
-            body: body ? JSON.stringify(body) : undefined,
-        });
+            credentials: withAuth ? "include" : "same-origin",
+            headers: {},
+        };
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data?.message || `Request failed: ${response.status}`);
+        if (data) {
+            if (isFormData) {
+                options.body = data;
+                // ❗ DO NOT set Content-Type for FormData
+            } else {
+                options.headers["Content-Type"] = "application/json";
+                options.body = JSON.stringify(data);
+            }
         }
 
-        return data;
+        const response = await fetch(url, options);
+
+        let parsedData;
+
+        try {
+            parsedData = await response.json();
+        } catch {
+            const text = await response.text();
+            throw new Error(text || "Invalid JSON response from server");
+        }
+
+        if (!response.ok) {
+            throw new Error(parsedData?.message || `Request failed: ${response.status}`);
+        }
+
+        return parsedData;
 
     } catch (error) {
         console.error("API Error:", error.message);
         throw error;
     }
-}
+};

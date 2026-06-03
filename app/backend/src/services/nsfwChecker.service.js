@@ -1,19 +1,30 @@
 export async function nsfwChecker(fileBuffer) {
-    const response = await fetch(
-        "https://router.huggingface.co/hf-inference/models/Freepik/nsfw_image_detector",
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${process.env.HF_TOKEN}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                inputs: fileBuffer.toString("base64"),
-            }),
+    try {
+        const response = await fetch(
+            "https://router.huggingface.co/hf-inference/models/Freepik/nsfw_image_detector",
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${process.env.HF_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    inputs: fileBuffer.toString("base64"),
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            console.warn(`[NSFW] HuggingFace API error: ${response.status} ${response.statusText}. Skipping check.`);
+            return null; // fail open
         }
-    );
-    const data = await response.json();
-    return data;
+
+        const data = await response.json();
+        return data;
+    } catch (err) {
+        console.warn(`[NSFW] HuggingFace unreachable: ${err.message}. Skipping check.`);
+        return null; // fail open — don't block upload when HF is down
+    }
 }
 
 export function evaluateNSFW(result) {

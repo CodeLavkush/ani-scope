@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-import { login as loginAPI } from "../api/auth";
+import { loginAdmin } from "../api/auth";
 import { login as loginRedux } from "../store/authSlice";
 import { Input, Button } from "../components";
 import loginCharacter from "../assets/login_character.png";
 import logoLarger from "../assets/logo-larger.png";
 
-function Login() {
+function AdminLogin() {
     const [formData, setFormData] = useState({
-        username: "",
+        email: "",
         password: "",
     });
     const [errors, setErrors] = useState({});
@@ -26,8 +26,10 @@ function Login() {
 
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.username.trim()) {
-            newErrors.username = "Username or Email is required";
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = "Invalid email address";
         }
         if (!formData.password) {
             newErrors.password = "Password is required";
@@ -42,30 +44,19 @@ function Login() {
 
         setLoading(true);
         try {
-            const input = formData.username.trim();
-            const loginPayload = {
-                password: formData.password,
-            };
-
-            if (input.includes("@")) {
-                loginPayload.email = input;
-            } else {
-                loginPayload.username = input;
-            }
-
-            const response = await loginAPI(loginPayload);
+            const response = await loginAdmin(formData);
             if (response && response.data) {
-                toast.success("Successfully logged in!");
+                toast.success("Welcome, Admin!");
                 dispatch(loginRedux(response.data.user));
-                navigate("/home");
+                navigate("/admin/dashboard");
             } else {
-                toast.error("Failed to log in.");
+                toast.error("Failed to log in as admin.");
             }
         } catch (error) {
             console.error(error);
             toast.error(error.message || "Invalid credentials.");
             setErrors({
-                api: error.message || "Failed to log in. Please check your credentials.",
+                api: error.message || "Failed to log in as admin. Please check your credentials.",
             });
         } finally {
             setLoading(false);
@@ -82,10 +73,10 @@ function Login() {
                     </div>
 
                     <h2 className="text-3xl font-extrabold text-[#4E361E] font-outfit uppercase tracking-tight mb-2 text-center md:text-left">
-                        Welcome Back
+                        Admin Portal
                     </h2>
                     <p className="text-sm text-[#4E361E]/70 font-poppins mb-6 text-center md:text-left">
-                        Enter your credentials to access your watchlist and reviews.
+                        Enter your email and password. Standard accounts will be upgraded to <strong>Admin role</strong> upon signing in.
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,13 +87,13 @@ function Login() {
                         )}
 
                         <Input
-                            label="Username or Email"
-                            name="username"
-                            type="text"
-                            value={formData.username}
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            value={formData.email}
                             onChange={handleChange}
-                            placeholder="Enter username or email"
-                            error={errors.username}
+                            placeholder="enter_admin_email@example.com"
+                            error={errors.email}
                             inputClass="border-[#4E361E] text-[#4E361E] focus:bg-[#FFD059]/10"
                             labelClass="text-[#4E361E]"
                         />
@@ -123,48 +114,46 @@ function Login() {
                             <Button
                                 type="submit"
                                 loading={loading}
-                                buttonClass="bg-[#F5C23E] hover:bg-[#FFD059] text-[#4E361E] border-4 border-[#4E361E] shadow-[4px_4px_0px_0px_#4E361E] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all duration-100 cursor-pointer text-lg h-14"
+                                buttonClass="bg-[#FFD059] hover:bg-[#F5C23E] text-[#4E361E] border-4 border-[#4E361E] shadow-[4px_4px_0px_0px_#4E361E] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all duration-100 cursor-pointer text-lg h-14"
                             >
-                                Login
+                                Access Admin Panel
                             </Button>
                         </div>
                     </form>
 
                     <div className="mt-8 text-center text-sm font-poppins text-[#4E361E]">
-                        Don't have an account?{" "}
+                        Standard User?{" "}
                         <Link
-                            to="/register"
+                            to="/login"
                             className="font-bold underline decoration-2 hover:text-[#F5C23E] transition-colors"
                         >
-                            Create account
-                        </Link>
-                    </div>
-
-                    <div className="mt-4 text-center text-xs font-poppins text-[#4E361E]/75">
-                        Are you an administrator?{" "}
-                        <Link
-                            to="/admin-login"
-                            className="font-bold underline decoration-2 hover:text-[#F5C23E] transition-colors"
-                        >
-                            Admin Access
+                            Sign In
                         </Link>
                     </div>
                 </div>
 
                 {/* Right Side: Illustration */}
-                <div className="hidden md:flex w-1/2 bg-[#FFD059] border-l-4 border-[#4E361E] items-center justify-center p-8 relative overflow-hidden">
+                <div className="hidden md:flex w-1/2 bg-[#4E361E] border-l-4 border-[#4E361E] items-center justify-center p-8 relative overflow-hidden">
                     {/* Retro background pattern elements */}
-                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#4E361E_2px,transparent_2px)] [background-size:16px_16px]"></div>
-                    <img
-                        src={loginCharacter}
-                        alt="Anime login character"
-                        className="w-full max-w-[320px] object-contain drop-shadow-[8px_8px_0px_rgba(78,54,30,0.15)] relative z-10 animate-pulse-slow"
-                        style={{ animationDuration: "6s" }}
-                    />
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FFEBB8_2px,transparent_2px)] [background-size:16px_16px]"></div>
+                    <div className="text-center text-[#FFEBB8] max-w-[280px] z-10 flex flex-col items-center gap-6">
+                        <img
+                            src={loginCharacter}
+                            alt="Anime login character"
+                            className="w-full max-w-[240px] object-contain drop-shadow-[8px_8px_0px_rgba(0,0,0,0.3)] animate-pulse-slow"
+                            style={{ animationDuration: "6s" }}
+                        />
+                        <div>
+                            <h3 className="text-xl font-bold font-outfit uppercase tracking-wider mb-2">CONTROL PANEL</h3>
+                            <p className="text-xs opacity-80 leading-relaxed font-poppins">
+                                Add new anime content, manage catalog updates, optimize images, and monitor user profiles.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-export default Login;
+export default AdminLogin;

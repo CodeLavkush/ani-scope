@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Home, Compass, Bookmark, User as UserIcon, LogOut } from 'lucide-react';
+import { X, Home, Compass, Bookmark, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
@@ -100,6 +100,16 @@ function Menu({ isMenu, setToggleMenu }) {
                                         <UserIcon size={20} /> Profile
                                     </button>
                                 </li>
+                                {userData?.role === "admin" && (
+                                    <li>
+                                        <button
+                                            onClick={() => handleNav("/admin/dashboard")}
+                                            className='w-full text-left font-bold font-outfit uppercase text-xl py-3 px-4 border-2 border-transparent hover:border-[#4E361E] hover:bg-[#FFD059] rounded-md transition-all duration-100 flex items-center text-amber-700 gap-3 cursor-pointer'
+                                        >
+                                            <LayoutDashboard size={20} /> Admin Panel
+                                        </button>
+                                    </li>
+                                )}
                             </>
                         ) : (
                             <>

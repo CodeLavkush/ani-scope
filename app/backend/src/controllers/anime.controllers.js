@@ -26,13 +26,14 @@ const createAnime = asyncHandler(async (req, res) => {
         )
     }
 
-    // NSFW checking
+    // NSFW checking — skip if HuggingFace is unavailable (returns null)
     const nsfwProbability = await nsfwChecker(req.file.buffer);
 
-    const decision = evaluateNSFW(nsfwProbability)
-
-    if (decision.status === "BLOCK" || decision.status === "REVIEW") {
-        throw new ApiError(400, decision.reason);
+    if (nsfwProbability !== null) {
+        const decision = evaluateNSFW(nsfwProbability)
+        if (decision.status === "BLOCK" || decision.status === "REVIEW") {
+            throw new ApiError(400, decision.reason);
+        }
     }
 
     //Saving image after checking nsfw flag
