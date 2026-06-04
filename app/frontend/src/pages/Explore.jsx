@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { getAnimeList, createAnime } from "../api/anime";
 import { ToggleMenu, Input, Button } from "../components";
 import logoSmaller from "../assets/logo-smaller.png";
-import posterFallback from "../assets/dummy/poster.jpg";
+import posterFallback from "../assets/poster-fallback.jpg";
 
 export default function Explore() {
     const navigate = useNavigate();

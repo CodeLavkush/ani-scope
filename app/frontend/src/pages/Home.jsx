@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { getAnimeList } from "../api/anime";
 import { addToWatchlist, removeFromWatchlist, getWatchlist } from "../api/watchlist";
 import { createReview } from "../api/review";
-import posterFallback from "../assets/dummy/poster.jpg";
+import posterFallback from "../assets/poster-fallback.jpg";
 import largerlogo from "../assets/logo-larger.png";
 import smallerlogo from "../assets/logo-smaller.png";
 import ToggleMenu from "../components/ToggleMenu";

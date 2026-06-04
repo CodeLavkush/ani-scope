@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { getWatchlist, removeFromWatchlist } from "../api/watchlist";
 import { ToggleMenu } from "../components";
 import logoSmaller from "../assets/logo-smaller.png";
-import posterFallback from "../assets/dummy/poster.jpg";
+import posterFallback from "../assets/poster-fallback.jpg";
 
 export default function Watchlist() {
     const navigate = useNavigate();

@@ -9,7 +9,7 @@ import { getReviews, createReview, deleteReview } from "../api/review";
 import { getRatingsStats, getMyRating, createRating, updateRating } from "../api/rating";
 import { ToggleMenu, Input, Button } from "../components";
 import logoSmaller from "../assets/logo-smaller.png";
-import posterFallback from "../assets/dummy/poster.jpg";
+import posterFallback from "../assets/poster-fallback.jpg";
 
 export default function Anime() {
     const { animeId } = useParams();
