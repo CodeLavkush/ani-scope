@@ -46,7 +46,7 @@ const emailVerificationMailgenContent = (username, otp) => {
             intro: "Welcome to our app! We're excited to have you on board.",
             dictionary: {
                 "OTP": otp,
-                "Valid For": "10 minutes"
+                "Valid For": "1 minute"
             },
 
             outro: "Need help, or have questions? Just reply to this email, we'd love to help."

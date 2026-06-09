@@ -43,12 +43,6 @@ const userSchema = new Schema(
         refreshToken: {
             type: String,
         },
-        otp: {
-            type: String,
-        },
-        otpExpiry: {
-            type: Date,
-        },
     },
     {
         timestamps: true,
@@ -88,20 +82,16 @@ userSchema.methods.generateRefreshToken = function () {
     )
 }
 
+userSchema.methods.otpKey = function () {
+    return `otp:${this.email}`
+}
+
 userSchema.methods.generateOTP = function () {
-    // generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // hash the OTP before saving
-    const hashedOTP = crypto
-        .createHash("sha256")
-        .update(otp)
-        .digest("hex");
+    const otpExpiry = Date.now() + 60 * 1000; // 1 minute
 
-    // expiry (5–10 mins is standard)
-    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
-
-    return { otp, hashedOTP, otpExpiry };
+    return { otp, otpExpiry };
 };
 
 export const User = mongoose.model("User", userSchema);

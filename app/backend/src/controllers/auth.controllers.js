@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import crypto from "crypto"
 import { USER_ROLES } from "../config/constant.js"
 import { uploadBufferToSupabase, deleteImageFromSupbase } from "../services/storage.service.js"
+import { connection } from "../queues/connection.js"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -56,14 +57,14 @@ const registerUser = asyncHandler(async (req, res) => {
         age,
     })
 
-    const { otp, hashedOTP, otpExpiry } = user.generateOTP()
+    const { otp, otpExpiry } = user.generateOTP()
 
-    user.otp = hashedOTP
-    user.otpExpiry = otpExpiry
+    console.log(`[DEV ONLY] Generated OTP for ${user.email} is: ${otp}`);
+
+    await connection.set(user.otpKey(), otp, "EX", otpExpiry)
+
 
     await user.save({ validateBeforeSave: false })
-
-    console.log(`[DEV] Registration OTP for ${user.username} (${user.email}): ${otp}`);
 
     await sendEmail(
         {
@@ -77,7 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 
     const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken -otp -otpExpiry",
+        "-password -refreshToken",
     )
 
     if (!createdUser) {
@@ -122,7 +123,7 @@ const login = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
 
     const loggedInUser = await User.findById(user._id).select(
-        "-password -refreshToken -otp -otpExpiry",
+        "-password -refreshToken",
     )
 
     const options = {
@@ -189,30 +190,32 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 const verifyEmail = asyncHandler(async (req, res) => {
-    const { otp } = req.body
+    const { otp, email } = req.body
+
+    const user = await User.findOne({ email }).select("-password -refreshToken")
+
+    if (!user) {
+        throw new ApiError(404, "User does not exists")
+    }
 
     if (!otp) {
         throw new ApiError(400, "Email Verification OTP is missing")
     }
 
-    let hashedOTP = crypto
-        .createHash("sha256")
-        .update(otp)
-        .digest("hex")
+    const savedOtp = await connection.get(user.otpKey())
 
-    const user = await User.findOne({
-        otp: hashedOTP,
-        otpExpiry: { $gt: Date.now() }
-    })
-
-    if (!user) {
-        throw new ApiError(400, "OTP is invalid or expired")
+    if (!savedOtp) {
+        throw new ApiError(400, "OTP is expired or not found")
     }
 
-    user.otpExpiry = undefined
-    user.otp = undefined
+    if (savedOtp !== otp) {
+        throw new ApiError(400, "Invalid OTP")
+    }
 
     user.isEmailVerified = true
+
+    await connection.del(user.otpKey())
+
     await user.save({ validateBeforeSave: false })
 
     return res
@@ -221,7 +224,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    isEmailVerified: true,
+                    isEmailVerified: user.isEmailVerified,
                 },
                 "Email is verified"
             )
@@ -239,14 +242,12 @@ const resendEmailVerification = asyncHandler(async (req, res) => {
     }
 
 
-    const { otp, hashedOTP, otpExpiry } = user.generateOTP()
+    const { otp, otpExpiry } = user.generateOTP()
+    console.log(`[DEV ONLY] Generated OTP for ${user.email} is: ${otp}`);
+    await connection.set(user.otpKey(), otp, "EX", otpExpiry)
 
-    user.otp = hashedOTP
-    user.otpExpiry = otpExpiry
 
     await user.save({ validateBeforeSave: false })
-
-    console.log(`[DEV] Resend OTP for ${user.username} (${user.email}): ${otp}`);
 
     await sendEmail(
         {
@@ -321,7 +322,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 const getProfiles = asyncHandler(async (req, res) => {
-    const profiles = await User.find().select("-refreshToken -password -otpExpiry -otp")
+    const profiles = await User.find().select("-refreshToken -password")
 
     if (profiles.length === 0) {
         throw new ApiError(404, "Profiles not found")
@@ -368,7 +369,7 @@ const createAdmin = asyncHandler(async (req, res) => {
             returnDocument: "after",
         }
     ).select(
-        "-password -refreshToken -otp -otpExpiry"
+        "-password -refreshToken"
     )
 
     const options = {
@@ -412,7 +413,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 
     if (req.file) {
-        const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
+        const user = await User.findById(userId).select("-password -refreshToken")
 
         await deleteImageFromSupbase(user?.avatar)
 
@@ -427,7 +428,7 @@ const updateProfile = asyncHandler(async (req, res) => {
         {
             returnDocument: "after",
         }
-    ).select("-password -refreshToken -otp -otpExpiry")
+    ).select("-password -refreshToken")
 
     if (!updatedUser) {
         throw new ApiError(404, "User not found")
@@ -452,11 +453,11 @@ const deleteProfile = asyncHandler(async (req, res) => {
     }
 
 
-    const user = await User.findById(userId).select("-password -otp -otpExpiry -refreshToken")
+    const user = await User.findById(userId).select("-password -refreshToken")
 
     await deleteImageFromSupbase(user?.avatar)
 
-    const deletedUser = await User.findByIdAndDelete(userId).select("-password -refreshToken -otp -otpExpiry")
+    const deletedUser = await User.findByIdAndDelete(userId).select("-password -refreshToken")
 
     if (!deletedUser) {
         throw new ApiError(404, "User not found")

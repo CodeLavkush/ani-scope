@@ -25,8 +25,8 @@ export const register = async (userFormData) => {
 export const login = (user) =>
     apiRequest(`${authURL}/login`, "POST", user);
 
-export const verifyEmail = (otp) =>
-    apiRequest(`${authURL}/verify-email`, "POST", { otp });
+export const verifyEmail = (otp, email) =>
+    apiRequest(`${authURL}/verify-email`, "POST", { otp, email });
 
 export const refreshToken = () =>
     apiRequest(`${authURL}/refresh-token`, "POST");

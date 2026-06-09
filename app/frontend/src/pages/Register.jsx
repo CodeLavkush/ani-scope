@@ -80,7 +80,7 @@ function Register() {
             const response = await registerAPI(data);
             if (response) {
                 toast.success("Registration successful! Verify your email.");
-                navigate("/verification");
+                navigate("/verification", { state: { email: formData.email.trim() } });
             }
         } catch (error) {
             console.error(error);
