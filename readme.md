@@ -2,6 +2,10 @@
 
 A modern full-stack movie showcase platform featuring smooth animations, OTP-based authentication, and scalable backend services.
 
+## 📺 Demo
+
+<video src="app/frontend/src/assets/demo.mp4" width="100%" controls></video>
+
 ---
 
 ## 🚀 Features
