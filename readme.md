@@ -4,7 +4,7 @@ A modern full-stack movie showcase platform featuring smooth animations, OTP-bas
 
 ## 📺 Demo
 
-<video src="app/frontend/src/assets/demo.mp4" width="100%" controls></video>
+🎥 **Demo Video:** [Watch Demo](https://www.linkedin.com/posts/lavkush-maurya-198487372_fullstackdevelopment-reactjs-frontenddevelopment-ugcPost-7468157298914254848-XlBc/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAFxDSEQB1dEYD4vsnOVLhvv39rZZ69KB_Wo)
 
 ---
 
